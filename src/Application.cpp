@@ -1,16 +1,19 @@
 #include "Application.hpp"
+#include "Tools.hpp"
 //#include "Scene.hpp"
-//#include "Tools.hpp"
-//#include "Camera.hpp"
 
 //@TODO: Ameliorate the scripting
 #include "Explosion.hpp"
 
 Application::Application():
-_windowWidth( 800 ),	
-_windowHeight( 600 ),	
-_xMousePosition( 0.0 ),
-_yMousePosition( 0.0 )
+_windowWidth(800),	
+_windowHeight(600),	
+_xMousePosition(0.0),
+_yMousePosition(0.0),
+m_goingLeft(false),
+m_goingRight(false),
+m_goingForward(false),
+m_goingBackward(false)
 {
 	//Fill up move values
 	_moveFlags[0]=0.0;
@@ -36,6 +39,7 @@ void Application::initApplication()
 
 	//Timer init (24 fps)
 	_renderTimer = SDL_AddTimer(41, renderLoopTimer, this);
+	_renderTimer = SDL_AddTimer(80, refreshLoopTimer, this);
 
 	//Move counter
 	_cntMove=0;
@@ -43,15 +47,15 @@ void Application::initApplication()
 
 	//Mouse is not going to leave the window
 	//Mouse won't be seeable
-	//SDL_WM_GrabInput(SDL_GRAB_ON);
-	//SDL_ShowCursor(SDL_DISABLE);
+	SDL_WM_GrabInput(SDL_GRAB_ON);
+	SDL_ShowCursor(SDL_DISABLE);
 }
 
 
 // Inits SDL and OpenGL context, sets a few states
 void Application::initDisplay()
 {
-	// Initialize timer, audio, video, CD_ROM, and joystick.
+	// Initialize timer, audio, video CD_ROM, and joystick.
 	int sdlError=SDL_Init(SDL_INIT_EVERYTHING);
 	if (sdlError<0) 
 		std::cout << "Unable to init SDL : " << SDL_GetError() << std::endl ;
@@ -124,49 +128,95 @@ void Application::switchFullScreen()
 // For example : rendrFrame action occurs if a timer event is passed
 void Application::handleUserEvents(SDL_Event* event)
 {
-    switch (event->user.code) 
-    {
-	// Frames update (24fps)
-        case MY_RENDER_LOOP:
-            renderFrame();
-	    animate();
-            break;
+	switch (event->user.code) 
+	{
+		// Frames update (24fps)
+		case MY_RENDER_LOOP:
+			drawFrame();
+			animate();
+			break;
+		
+		// Refresh update (1sec)
+		case FREE_REFRESH_LOOP:
+			tool_camera::manageFps(*(this), m_camera);
+			break;
 
-        default:
-            break;
-    }
+		default:
+			break;
+	}
 }
 
 
 // Distributes task for the "key" kind of events 
 // For example : std::cout when b key is pressed
-void Application::handleKeyDownEvents( SDL_keysym* keysym)
+void Application::handleKeyDownEvents(SDL_keysym* keysym)
 {
 	switch(keysym->sym)
     	{
     		case SDLK_ESCAPE:
       			_done=true;
-      		break;
+      			break;
       	
 		// W : wireframe
     		case SDLK_w :
       			switchWireframe();
-      		break;
+      			break;
       	
 		// F : fullscreen
      		case SDLK_f :
       			switchFullScreen();
-      		break;     	
+      			break;     	
 	
 		//@TO_REMOVE
 		// E : explose everything
 		case SDLK_e :
 			for(unsigned int i=0; i<m_figures.size(); ++i)
 				m_figures[i] = new Explosion(m_figures[i]);
-		break;
-			
+			break;
+
+		// FPS management
+		// classic : Z,Q,S,D
+		case SDLK_z :	
+			m_goingForward = true;
+		      	break;
+		case SDLK_s :
+			m_goingBackward = true;
+			break;
+		case SDLK_q :
+			m_goingLeft = true;
+			break;
+		case SDLK_d :
+			m_goingRight = true;			
+			break;
+
     		default:
-      		break;
+      			break;
+  	}
+}
+
+// Distributes task for the "key" kind of events 
+// For example : std::cout when b key is pressed
+void Application::handleKeyUpEvents(SDL_keysym* keysym)
+{
+	switch(keysym->sym)
+    	{
+		// FPS management
+		// classic : Z,Q,S,D
+		case SDLK_z :	
+			m_goingForward = false;
+		      	break;
+		case SDLK_s :
+			m_goingBackward = false;
+			break;
+		case SDLK_q :
+			m_goingLeft = false;
+			break;
+		case SDLK_d :
+			m_goingRight = false;			
+			break;
+
+    		default:
+      			break;
   	}
 }
 
@@ -174,45 +224,73 @@ void Application::handleKeyDownEvents( SDL_keysym* keysym)
 // and distributes corresponding tasks
 void Application::eventLoop()
 {
-    SDL_Event event;
-    
-    while( (!_done) && (SDL_WaitEvent( &event )) ) 
-    {
-        switch(event.type) 
-        {
-            case SDL_USEREVENT:
-                handleUserEvents( &event );
-                break;
-            case SDL_KEYDOWN:
-            	handleKeyDownEvents( &event.key.keysym );
-                break;                                   
-            case  SDL_VIDEORESIZE: 
-            	resize( event.resize.w, event.resize.h );
-                break;                      
-            case SDL_QUIT:
-                _done=true;
-                break;
-            default:
-                break;
-        } 
-    }
+	SDL_Event event;
+    	float test = 0.0f;
+
+	while( (!_done) && (SDL_WaitEvent( &event )) ) 
+	{
+		switch(event.type) 
+		{
+			case SDL_USEREVENT:
+				handleUserEvents( &event );
+				break;
+			case SDL_KEYDOWN:
+				handleKeyDownEvents( &event.key.keysym );
+				break;                                   
+			case  SDL_VIDEORESIZE: 
+				resize( event.resize.w, event.resize.h );
+				break;                      
+			case SDL_QUIT:
+				_done=true;
+				break;
+
+	   		// Manage the mouse motion
+			case SDL_MOUSEMOTION:
+				_xMousePosition += (float)event.motion.xrel/(float)_windowWidth * 1.2f;
+				test = _yMousePosition - (float)event.motion.yrel/(float)_windowHeight * 1.2f;
+				if((test>-M_PI) && (test<0.0f))
+					_yMousePosition -= (float)event.motion.yrel/(float)_windowHeight * 1.2f;
+
+				break;
+
+			default:
+				break;
+		} 
+	}
 }
 
 // Render current image in OpenGL
-void Application::renderFrame()
+void Application::drawFrame()
 {
 	// Clears the window with current clearing color, clears also the depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//<DRAW HERE>
-	//_drawTestSample();
 	std::cout << "\nDRAW - FRAME : " << _cntMove << std::endl;
+	// Sets the matrix mode
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+	glFrustum(1,1,1,1,0.00001, 10);
+	//@TODO: clean up here!
+	glMatrixMode(GL_MODELVIEW);
+	float modelView[16];
+	for(unsigned int i=0; i<16; ++i)
+		modelView[i] = m_camera.view()[i];
+	//@TODO: Verify the camera matrix management
+	tool_debug::printMatrix(m_camera.view());
+	glLoadMatrixf(modelView);
+
+	
 	glBegin(GL_POINTS);
  	glPointSize(10.0f);
+	glColor3ub(255,0,0);
+	glVertex3f(0.0f, 0.0f, -1.0f);
 	glColor3ub(255,255,255);
 	for( unsigned int i=0; i<m_figures.size(); ++i)
 		m_figures[i]->brutalDraw();
 	glEnd();
+	
+	//tool_camera::drawTestSample();
 	//</DRAW HERE>
   
 	// Performs the buffer swap between the current shown buffer
@@ -248,16 +326,6 @@ void Application::addFigure(Figure* f)
 	m_figures.push_back(f);
 }
 
-// Draw the color triangle to test display
-void Application::_drawTestSample()
-{
-	glBegin(GL_TRIANGLES);
-	glColor3ub(255,0,0);    glVertex2d(-0.75,-0.75);
-	glColor3ub(0,255,0);    glVertex2d(0,0.75);
-	glColor3ub(0,0,255);    glVertex2d(0.75,-0.75);
-	glEnd();
-}
-
 // Remove un-needed figures (empty ones)
 void Application::_removeEmptyFigures()
 {	
@@ -273,7 +341,6 @@ void Application::_removeEmptyFigures()
 	}
 }
 
-
 // Utils
 
 // Create an user event for the render loop (the id is "MY_RENDER_LOOP")
@@ -283,6 +350,19 @@ Uint32 renderLoopTimer(Uint32 interval, void* param)
     SDL_Event event;
     event.type = SDL_USEREVENT;
     event.user.code = MY_RENDER_LOOP;
+    event.user.data1 = 0;
+    event.user.data2 = 0;
+    SDL_PushEvent(&event);
+    return interval;
+}
+
+// Create an user event for the render loop (the id is "MY_RENDER_LOOP")
+// and registers it : it should now be send every "interval" set of time
+Uint32 refreshLoopTimer(Uint32 interval, void* param)
+{
+    SDL_Event event;
+    event.type = SDL_USEREVENT;
+    event.user.code = FREE_REFRESH_LOOP;
     event.user.data1 = 0;
     event.user.data2 = 0;
     SDL_PushEvent(&event);

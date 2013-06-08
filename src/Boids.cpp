@@ -61,7 +61,8 @@ void Boids::move_boids(float valC, float valA,
 	//@TODO: Animate leader
 	m_group[0].setPosition(0,0.0f);
 	m_group[0].setPosition(1,0.0f);
-	m_group[0].setPosition(2,0.0f);
+	//@TODO: change current position of Boids0
+	m_group[0].setPosition(2,-1.0f);
 
 	
 	//@WARNING

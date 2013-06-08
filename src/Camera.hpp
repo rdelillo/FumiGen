@@ -37,6 +37,22 @@ public :
         void setPerspectiveFromAngle(const float fovy, const float aspectRatio);
 	// Update the camera target
         void lookAt(const std::vector<float>& aim, const std::vector<float>& up);
+	
+	// Get/set
+	// View matrix
+	std::vector<float>& view();
+	// Position
+	const float position(const int i) const;
+	void setPosition(const int i, const float value);
+	// X axis
+	const float xAxis(const int i) const;
+	void setXAxis(const int i, const float value);
+	// Y axis
+	const float yAxis(const int i) const;
+	void setYAxis(const int i, const float value);
+	// Z axis
+	const float zAxis(const int i) const;
+	void setZAxis(const int i, const float value);
 };
 
 

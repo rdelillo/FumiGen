@@ -7,6 +7,7 @@
 
 #include "Variables.h"
 #include "Figure.hpp"
+#include "Camera.hpp"
 
 
 class Application
@@ -35,11 +36,18 @@ private :
 	float _moveFlags[3];
 	GLfloat _cameraMode;
 	
+	// Keyboard parameters
+	bool m_goingLeft;					// is going left
+	bool m_goingRight;					// is going right
+	bool m_goingForward;					// is going forward	
+	bool m_goingBackward;					// is going backward
+
 	// Figure parameters
 	std::vector<Figure*> m_figures;				// Contains all of the figures defined
 
 	//Others
-	GLuint _cntMove; 					// Move counter
+	Camera m_camera;					// the FPS camera
+	unsigned int _cntMove; 					// Move counter
 	bool _done; 						// set to true when the window is closed or to end the application
 
 public :
@@ -64,13 +72,25 @@ public :
 	void handleUserEvents(SDL_Event* event);
 	// Distributes task for the "user" kind of events 
 	// For example : rendrFrame action occurs if a timer event is passed
+	void handleKeyUpEvents(SDL_keysym* keysym);
 	void handleKeyDownEvents(SDL_keysym* keysym);
+
+	// KEYBOARD-MOUSE MANAGEMENT
+	inline bool goingLeft() const { return m_goingLeft; }
+	inline bool goingRight() const { return m_goingRight; }
+	inline bool goingForward() const { return m_goingForward; }
+	inline bool goingBackward() const { return m_goingBackward; }
+	inline float xMousePosition() const { return _xMousePosition; }
+	inline float yMousePosition() const { return _yMousePosition; }
 
 	// LISTENER
 	// Listens to events during the whole time of the application
 	// and distributes corresponding tasks
 	void eventLoop();
 	// Render current image in OpenGL
+	void drawFrame();
+	//@TODO: keep that ?
+	// Render current frame with RenderMan
 	void renderFrame();
 	// Animates an objets
 	void animate();
@@ -83,8 +103,6 @@ public :
 	void addFigure(Figure* f);
 
 private :
-	// Draw the color triangle to test display
-	void _drawTestSample();
 	// Remove un-needed figures
 	void _removeEmptyFigures();
 };
@@ -92,6 +110,6 @@ private :
 // Create an user event for the render loop (the id is "MY_RENDER_LOOP")
 // and registers it : it should now be send every "interval" set of time
 Uint32 renderLoopTimer(Uint32 interval, void* param);
-
+Uint32 refreshLoopTimer(Uint32 interval, void* param);
 
 #endif 

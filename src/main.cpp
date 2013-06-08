@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 	Application* application = createApplication();
 
 	// Creation of the figure to store
-	application->addFigure(new Boids(200));
+	application->addFigure(new Boids(30));
 
 	// Render Loop
 	application->eventLoop();

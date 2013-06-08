@@ -8,9 +8,9 @@ Camera::Camera()
 	// Initial position
 	for(unsigned int i=0; i<3; ++i)
 		m_position.push_back(0.0f);
-	m_position[0] = 10.0f;
-	m_position[1] = 15.0f;
-	m_position[2] = 10.0f;
+	m_position[0] = 0.0f;
+	m_position[1] = 0.0f;
+	m_position[2] = 0.0f;
 
 	// Initial parameters
 	const float l = 1.0f;
@@ -39,7 +39,7 @@ Camera::Camera()
 	m_right = l;
 	m_bottom = -l;
 	m_top = l;
-	m_near = 0.1;
+	m_near = 0.01;
 	m_far = m_near + 100000.0*l;
 	
 	// Set default values to the matrices
@@ -141,4 +141,49 @@ void Camera::setPerspectiveFromAngle(const float fovy, const float aspectRatio)
 	m_right = m_top * aspectRatio;
 
 	updateProjection();
+}
+
+// Get/set
+// View matrix
+std::vector<float>& Camera::view()
+{
+	return m_view;
+}
+// Get position of the camera
+const float Camera::position(const int i) const
+{
+	return m_position[i];
+}
+// Set position of the camera
+void Camera::setPosition(const int i, const float value)
+{
+	m_position[i] = value;
+}
+// X axis
+// Get value for xAxis
+const float Camera::xAxis(const int i) const
+{
+	return m_xAxis[i];
+}
+void Camera::setXAxis(const int i, const float value)
+{
+	m_xAxis[i] = value;
+}
+// Y axis
+const float Camera::yAxis(const int i) const
+{
+	return m_yAxis[i];
+}
+void Camera::setYAxis(const int i, const float value)
+{
+	m_yAxis[i] = value;
+}
+// Z axis
+const float Camera::zAxis(const int i) const
+{
+	return m_zAxis[i];
+}
+void Camera::setZAxis(const int i, const float value)
+{
+	m_zAxis[i] = value;
 }
