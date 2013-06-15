@@ -26,6 +26,11 @@ Boids::Boids(const int nbUnits, const float sizeBox)
 		m_group.push_back(b);
 		computeInitialPosition(boidId);
 	}
+	//@TODO: remove
+	m_group[0].setLeaderShip(1000); 
+	m_group[0].setPosition(0,0.0f);
+	m_group[0].setPosition(1,0.0f);
+	m_group[0].setPosition(2,-0.5f);
 }
 
 Boids::Boids(const int nbUnits, const float sizeBox, const std::vector<float> origin)
@@ -58,30 +63,27 @@ void Boids::move_boids(float valC, float valA,
 		 float valS, float valR)
 {
 	std::cout << "move Boids system" << std::endl;
-	//@TODO: Animate leader
-	m_group[0].setPosition(0,0.0f);
-	m_group[0].setPosition(1,0.0f);
+	//@TODO: Modify Animate leader
 	//@TODO: change current position of Boids0
-	m_group[0].setPosition(2,-1.0f);
-
-	
+		
 	//@WARNING
 	// We only update the boid which are not leader
 	// so explicitely forget the first one
 	for(unsigned int i=1; i<m_group.size(); ++i)
-		moveOneBoid(i, valC, valA, valS);
+		moveOneBoid(i, valC, valA, valS, valR);
 }
 
 
 // Move one specific boid 
 // idBoid : id of the specific boid to move
 void Boids::moveOneBoid(const int idBoid, const float UserValueC, 
-		 const float UserValueV, const float UserValueS)
+		 const float UserValueV, const float UserValueS, const float UserValueR)
 {
 	// Usual vector
 	std::vector<float> v1;
 	std::vector<float> v2;
 	std::vector<float> v3;
+	std::vector<float> v4;
 	std::vector<float> newVelocity ;
 	std::vector<float> newPosition ;
 	std::vector<float> currentPosition;
@@ -90,6 +92,7 @@ void Boids::moveOneBoid(const int idBoid, const float UserValueC,
 	v1 = cohesion(idBoid, UserValueC);
 	v2 = align(idBoid, UserValueV);
 	v3 = separation(idBoid, UserValueS);
+	v4 = limiteBox(idBoid, UserValueR);
 	currentPosition = m_group[idBoid].getPosition();
 	
 	for(unsigned int i=0; i<3; ++i)
@@ -232,6 +235,29 @@ std::vector<float> Boids::align(const int idBoid, const float UserValueV)
 		velocity[i] = (velocity[i]-m_group[idBoid].velocite(i))/UserValueV;
 	}
 	return velocity;
+}
+
+// Reduce limit box for a boid
+std::vector<float> Boids::limiteBox(const int idBoid, const float UserValueR)
+{
+	
+	std::vector<float> center;
+	for(unsigned int i=0; i<3; i++)
+		center.push_back(0.0);
+		
+	std::vector<float> decalage;
+	for(unsigned int i=0; i<3; i++)
+		decalage.push_back(0.0);
+
+	for(unsigned int idx=0; idx<3; ++idx)
+	{
+		if(m_group[idBoid].position(idx) < (center[idx] - UserValueR))
+			decalage[idx] = -(m_group[idBoid].velocite(idx) * 2);
+		else if(m_group[idBoid].position(idx) > (center[0] + UserValueR))
+			decalage[idx] = -(m_group[idBoid].velocite(idx) * 2);
+	}
+	
+	return decalage;
 }
 
 

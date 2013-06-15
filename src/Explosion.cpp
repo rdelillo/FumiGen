@@ -76,14 +76,20 @@ void Explosion::_moveOneBoid(const int idBoid)
 	// Work on norm as percentage
 	norm/= 100.0;
 	float explFactor = 0.0f;
-	//@TODO: Ameliorate the explosion animation
-	if(norm < 0.2)			// very close from impact
+
+	if(norm < 0.005)			// on impact
+		explFactor = 7.0f;
+	else if(norm < 0.01)			// very close from impact
+		explFactor = 6.0f;
+	else if(norm < 0.02)			// close from impact
 		explFactor = 5.0f;
-	else if (norm < 0.6)		// close from impact
+	else if(norm < 0.03)			// far from impact
+		explFactor = 3.5f;
+	else if(norm < 0.06)			// affected by impact
 		explFactor = 2.0f;
-	else				// not so close from impact
+	else					// not so affected by impact
  		explFactor = 0.5f;
-	
+
 	explFactor *= EXPLOSION_RANDOM;
 	// Compute new position
 	for(unsigned int idx=0; idx<3; ++idx)

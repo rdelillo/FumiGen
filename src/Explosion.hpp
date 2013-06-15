@@ -14,8 +14,7 @@ class Explosion : public Figure
 {
 private :
 	std::vector<float> m_origin;			// origin of the explosion
-	//@TODO: Adjust explosion variables
-	const static float EXPLOSION_RANDOM = 0.005f;	// affects position
+	const static float EXPLOSION_RANDOM = 0.007f;	// affects position
 	const static float EXPLOSION_INTENSITY = 0.001f;// affects intensity change
 
 public :

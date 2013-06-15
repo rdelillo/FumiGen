@@ -41,8 +41,8 @@ class Boids : public Figure
 	//@TODO: Construct a boids system from Mesh or something else
 
 	// Move the group (animation)
-	void move_boids(float valC = 100.0, float valA = 8,
-		  float valS = 0.1, float valR = 30);
+	void move_boids(float valC = 40.0, float valA = 10,
+		  float valS = 0.02, float valR = 7.5);
 
 	void move();
 	
@@ -54,13 +54,15 @@ class Boids : public Figure
 
 	//Move on boid
 	void moveOneBoid(const int idBoid, const float UserValueC, 
-		         const float UserValueV, const float UserValueS);
+		         const float UserValueV, const float UserValueS, const float UserValueR);
 	// Compute cohesion (boid closed to each others)
 	std::vector<float> cohesion(const int idBoid, const float UserValueC);
 	// Compute separation (boid far to each others)
 	std::vector<float> separation(const int idBoid, const float UserValueS);
 	// Compute alignement (moderate velocity to each others)
 	std::vector<float> align(const int idBoid, const float UserValueV);
+	// Compute reduction and limit box for a boid
+	std::vector<float> limiteBox(const int idBoid, const float UserValueR);
 };
 
 // Compute colision between 2 cubic boxes	

@@ -139,6 +139,8 @@ void Application::handleUserEvents(SDL_Event* event)
 		// Refresh update (1sec)
 		case FREE_REFRESH_LOOP:
 			tool_camera::manageFps(*(this), m_camera);
+			// To print the deplacement matrix
+			//tool_debug::printMatrix(m_camera.view());
 			break;
 
 		default:
@@ -234,6 +236,9 @@ void Application::eventLoop()
 			case SDL_USEREVENT:
 				handleUserEvents( &event );
 				break;
+			case SDL_KEYUP:
+				handleKeyUpEvents( &event.key.keysym );
+				break; 
 			case SDL_KEYDOWN:
 				handleKeyDownEvents( &event.key.keysym );
 				break;                                   
@@ -267,25 +272,23 @@ void Application::drawFrame()
 
 	//<DRAW HERE>
 	std::cout << "\nDRAW - FRAME : " << _cntMove << std::endl;
+
 	// Sets the matrix mode
 	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-	glFrustum(1,1,1,1,0.00001, 10);
-	//@TODO: clean up here!
+	glLoadIdentity();
+	//@WARNING : Need a float* for modelview in OpenGL
 	glMatrixMode(GL_MODELVIEW);
 	float modelView[16];
-	for(unsigned int i=0; i<16; ++i)
-		modelView[i] = m_camera.view()[i];
-	//@TODO: Verify the camera matrix management
-	tool_debug::printMatrix(m_camera.view());
-	glLoadMatrixf(modelView);
+	glLoadMatrixf(m_camera.getViewf(modelView));
 
+	// Usuals draw settings
+	glPointSize(1.5f);
+	glColor3ub(255,0,0);
 	
 	glBegin(GL_POINTS);
- 	glPointSize(10.0f);
-	glColor3ub(255,0,0);
 	glVertex3f(0.0f, 0.0f, -1.0f);
 	glColor3ub(255,255,255);
+	// Draw all of the figures
 	for( unsigned int i=0; i<m_figures.size(); ++i)
 		m_figures[i]->brutalDraw();
 	glEnd();

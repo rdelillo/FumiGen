@@ -50,18 +50,4 @@ namespace tool_debug
 	void printMatrix(const std::vector<float> matrix);
 }
 
-
-//@TODO: remove undefined tools functions ?
-/*
-std::string * loadFile(const std::string & fileName);
-void printShaderLog(GLint shaderId);
-GLuint loadProgram(const std::vector<std::string> & files);
-void setMatricesInShader(GLuint shaderId, GLfloat * model, GLfloat * view, GLfloat * projection);
-void setLightInShader(GLuint shaderID, GLfloat * position, GLfloat power);
-void setMaterialInShader(GLuint shaderID, GLfloat * ambient, GLfloat * diffuse, GLfloat * specular, GLfloat ka, GLfloat kd, GLfloat ks, GLfloat shininess);
-void changeMaterialColorInShader(GLuint shaderID, GLfloat * color);
-void setFilledDataInShader(GLuint shaderID, GLboolean positions, GLboolean normals, GLboolean uvs, GLboolean colors);
-unsigned char * loadPPM(const std::string & filename, GLuint * width, GLuint * height);
-*/
-
 #endif //  __TOOLS_HPP__

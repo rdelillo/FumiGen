@@ -22,6 +22,7 @@ class Boid
 	// Usual Getters
 	inline float const idBoid() const {return m_idBoid;};
 	inline float const leaderShip() const {return m_leaderShip;};
+	inline void setLeaderShip(const int value){m_leaderShip = value;};
 	
 	// Builder
 	Boid(const int idBoid);

@@ -37,6 +37,10 @@ public :
         void setPerspectiveFromAngle(const float fovy, const float aspectRatio);
 	// Update the camera target
         void lookAt(const std::vector<float>& aim, const std::vector<float>& up);
+
+	// Utils
+	// Get camera matrix as float* for openGL
+	float* getViewf(float* modelView);
 	
 	// Get/set
 	// View matrix

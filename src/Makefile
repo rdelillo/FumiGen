@@ -9,8 +9,9 @@ ifeq ($(MACHINE),Darwin)
 	SDL_LIB = `sdl-config --libs`
 	CXX=g++
 else
-	OPENGL_INC = -I/usr/X11R6/include
+	OPENGL_INC = -I/usr/X11R6/include -I API/lib3ds/include
 	OPENGL_LIB = -I/usr/lib64 -lGL -lGLU -lm
+	LDLIBSOPTIONS=-LAPI/lib3ds/lib   API/lib3ds/lib/lib3ds.a
 	SDL_INC = -I/usr/include/SDL/
 	SDL_LIB = `sdl-config --libs`
 	#RENDERMAN_INC =  -I$(DELIGHT)/include
@@ -25,15 +26,11 @@ COMPILER_FLAGS_WARN= -Wall -I.
 EXE=TestAppli
 
 INCLUDE= $(SDL_INC) $(OPENGL_INC) $(RENDERMAN_INC)
-LIBS= $(SDL_LIB) $(OPENGL_LIB) $(RENDERMAN_LIB)
+LIBS= $(SDL_LIB) $(OPENGL_LIB) $(RENDERMAN_LIB) $(LDLIBSOPTIONS)
 
 OBJS = main.o Application.o Figure.o
 OBJS += Boid.o Boids.o Explosion.o
 OBJS += Camera.o Tools.o
-#OBJS = Camera.o Scene.o convert.o Light.o renderman.o CameraMotion.o Rail.o Pan.o Application.o tools.o
-#OBJS += main.o glew.o ShadersBases.o ObjectGL.o Light.o Spline.o  Map.o MultiSpline.o TruncateCone.o Cube.o
-#OBJS += CubeLumineux.o Flocon.o Grille.o Spider.o SphereNR.o SpiderLeg.o ArbreGentil.o Abdomen.o
-#OBJS += Leaf.o Champignon.o Cristal.o BlocCristal.o Feuille.o Fougere.o Rock.o Trunk.o Firebug.o Grass.o ParticleEngine.o LeafEngine.o
 
 all : $(EXE) 
 
