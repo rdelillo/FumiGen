@@ -9,9 +9,9 @@ ifeq ($(MACHINE),Darwin)
 	SDL_LIB = `sdl-config --libs`
 	CXX=g++
 else
-	OPENGL_INC = -I/usr/X11R6/include -I API/lib3ds/include
-	OPENGL_LIB = -I/usr/lib64 -lGL -lGLU -lm
-	LDLIBSOPTIONS=-LAPI/lib3ds/lib   API/lib3ds/lib/lib3ds.a
+	OPENGL_INC = -I/usr/X11R6/include  -I/usr/local/include
+	OPENGL_LIB = -I/usr/lib64 -lGL -lGLU -lm -l3ds
+	LDLIBSOPTIONS= -L/usr/local/lib   /usr/local/lib/lib3ds.a
 	SDL_INC = -I/usr/include/SDL/
 	SDL_LIB = `sdl-config --libs`
 	#RENDERMAN_INC =  -I$(DELIGHT)/include
@@ -26,10 +26,10 @@ COMPILER_FLAGS_WARN= -Wall -I.
 EXE=TestAppli
 
 INCLUDE= $(SDL_INC) $(OPENGL_INC) $(RENDERMAN_INC)
-LIBS= $(SDL_LIB) $(OPENGL_LIB) $(RENDERMAN_LIB) $(LDLIBSOPTIONS)
+LIBS= $(SDL_LIB) $(OPENGL_LIB) $(RENDERMAN_LIB)
 
 OBJS = main.o Application.o Figure.o
-OBJS += Boid.o Boids.o Explosion.o
+OBJS += Boid.o Boids.o Explosion.o Mesh.o
 OBJS += Camera.o Tools.o
 
 all : $(EXE) 
