@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <vector>
+#include <set>
 #include "math.h"
 
 //#include <API/lib3ds/include/lib3ds.h>
@@ -22,10 +23,12 @@ private :
 	int m_nbFaces;					// Number of faces of the Mesh	
 	//@WARNING float* due to lib3ds
     	float m_boundingMin[3], m_boundingMax[3];     	// Bounding box
-	//@WARNING this info can contain double,
-	// however it will be usefull to compute
-	// the potential renderman shaders
-	std::vector< std::vector<float> > m_mesh;		// rought data		
+	//this info does not contain double,
+	std::set< std::vector<float> > m_mesh;		// tried data
+	//@WARNING to keep ?
+	// It would be usefull to store them
+	// for the potential renderman shaders	
+	std::vector< std::vector<float> > m_roughMesh;  // rough mesh	
 public :
 	// Builder
 	// Construct a Mesh from an obj file

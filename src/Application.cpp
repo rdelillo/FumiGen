@@ -1,13 +1,13 @@
 #include "Application.hpp"
 #include "Tools.hpp"
-//#include "Scene.hpp"
 
 //@TODO: Ameliorate the scripting
 #include "Explosion.hpp"
+#include "Boids.hpp"
 
 Application::Application():
 _windowWidth(800),	
-_windowHeight(600),	
+_windowHeight(450),	
 _xMousePosition(0.0),
 _yMousePosition(0.0),
 m_goingLeft(false),
@@ -174,6 +174,13 @@ void Application::handleKeyDownEvents(SDL_keysym* keysym)
 		case SDLK_e :
 			for(unsigned int i=0; i<m_figures.size(); ++i)
 				m_figures[i] = new Explosion(m_figures[i]);
+			break;
+
+		//@TO_REMOVE
+		// B : make everything as Boids
+		case SDLK_b :
+			for(unsigned int i=0; i<m_figures.size(); ++i)
+				m_figures[i] = new Boids(m_figures[i]);
 			break;
 
 		// FPS management

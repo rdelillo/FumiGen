@@ -37,8 +37,8 @@ class Boids : public Figure
 	// Construct a boids system from nowhere
 	Boids(const int nbUnits, const float sizeBox=5.0f);
 	Boids(const int nbUnits, const float sizeBox, const std::vector<float> origin);
-	
-	//@TODO: Construct a boids system from Mesh or something else
+	// Construct a boids system from Mesh or something else
+	Boids(Figure* b);
 
 	// Move the group (animation)
 	void move_boids(float valC = 40.0, float valA = 10,
@@ -52,7 +52,7 @@ class Boids : public Figure
 	// Is one boid into vital space of another one
 	const bool isIntoVitalSpace(const int idBoid);	
 
-	//Move on boid
+	// Move on boid
 	void moveOneBoid(const int idBoid, const float UserValueC, 
 		         const float UserValueV, const float UserValueS, const float UserValueR);
 	// Compute cohesion (boid closed to each others)

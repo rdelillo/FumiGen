@@ -35,13 +35,14 @@ Boids::Boids(const int nbUnits, const float sizeBox)
 
 Boids::Boids(const int nbUnits, const float sizeBox, const std::vector<float> origin)
 {
+	m_type = "BOIDS_SYSTEM";
 	// Fill up global box constants
 	c_sizeBox = sizeBox ;
-	for( unsigned int i=0; i<3; ++i )
+	for(unsigned int i=0; i<3; ++i)
 		c_origin.push_back(origin[i]);
 
 	// Creation of the group
-	// use an int to avoid warnings on build
+	//@WARNING use an int to avoid warnings on build
 	for(int i=0; i<nbUnits ; ++i)
 	{
 		// Create the new boid
@@ -50,6 +51,33 @@ Boids::Boids(const int nbUnits, const float sizeBox, const std::vector<float> or
 		m_group.push_back(b);
 		computeInitialPosition(boidId);
 	}
+}
+
+// Construct a boids system from Mesh or something else
+//@WARNING: Destroy the previous figure
+Boids::Boids(Figure* b)
+{
+	// Check if given Figure is already a Boids system
+	if(b->type() == "BOIDS_SYSTEM")
+		std::cout << "WARNNING given figure is" \ 
+			" already a Boids system" << std::endl;
+
+	m_type = "BOIDS_SYSTEM_FROM_" + b->type();
+	for(unsigned int i=0; i<b->size(); ++i)
+	{
+		Boid newBoid(i);
+		for(unsigned int idx=0; idx<3; ++idx)
+			newBoid.setPosition(idx, b->getBoid(i).position(idx));
+		newBoid.setIntensity(b->getBoid(i).intensity());
+		m_group.push_back(newBoid);
+	}
+	free(b);
+
+	//@TODO: remove
+	m_group[0].setLeaderShip(1000); 
+	m_group[0].setPosition(0,0.0f);
+	m_group[0].setPosition(1,0.0f);
+	m_group[0].setPosition(2,-0.5f);
 }
 
 // Abstract move function overwritten
@@ -62,7 +90,6 @@ void Boids::move()
 void Boids::move_boids(float valC, float valA,
 		 float valS, float valR)
 {
-	std::cout << "move Boids system" << std::endl;
 	//@TODO: Modify Animate leader
 	//@TODO: change current position of Boids0
 		

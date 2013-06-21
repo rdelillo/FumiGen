@@ -21,7 +21,7 @@ int main(int argc, char **argv)
 	Application* application = createApplication();
 
 	// Creation of the figure to store
-	//application->addFigure(new Boids(30));
+	application->addFigure(new Boids(30));
 	application->addFigure(new Mesh("/home/robin/Bureau/Projet/obj/simba3ds.3DS"));	
 
 	// Render Loop

@@ -29,7 +29,7 @@ void Mesh::_loadDataFromFile()
 {
 	// Loop through all the meshes
 	// (better to keep 1 per file)
-	//@WARNING : do not use an int for warning when build
+	//@WARNING : do use an int for warning when build
 	for(int iMesh=0; iMesh<m_model->nmeshes; ++iMesh)
 	{
 		// Double check file content is OK
@@ -44,7 +44,7 @@ void Mesh::_loadDataFromFile()
 		lib3ds_mesh_bounding_box(m_refMesh, m_boundingMin, m_boundingMax);        
 
 		// Loop through every face
-		//@WARNING : do not use an int for warning on build
+		//@WARNING : do use an int for warning on build
 		for(int iFace=0; iFace<m_nbFaces; ++iFace)
 		{
 		    Lib3dsFace* face = &m_refMesh->faces[iFace];
@@ -54,8 +54,11 @@ void Mesh::_loadDataFromFile()
 			for(unsigned int idx=0; idx<3; ++idx)
 				point.push_back(m_refMesh->vertices[face->index[i]][idx]);
 
+			// Use a set dramatically reduced the number of points
+			// Else the same point is stored for each face
+			m_mesh.insert(point);
 			// Add this point to rough data
-			m_mesh.push_back(point);
+			m_roughMesh.push_back(point);
 		    }
 		}
 	} 
@@ -64,40 +67,22 @@ void Mesh::_loadDataFromFile()
 // Generate boid field	
 void Mesh::_generateBoidsFromMesh()
 {
-	for(unsigned int i=0; i<m_mesh.size(); ++i)
+	std::set< std::vector<float> >::iterator it;
+	for (it=m_mesh.begin(); it!=m_mesh.end(); ++it)
 	{
 		//@TODO: optimize the mesh
 		// Always add the first one
 		Boid b(0);			
 		for(unsigned int j=0; j<3; ++j)
-			b.setPosition(j, m_mesh[i][j]);
+			b.setPosition(j, it->at(j));
 
  		// Add this point as a new Boid
 		m_group.push_back(b);
-		continue;	
-	
-		// Brutal compare and add to mesh
-		//@WARNING need to use a regular int here
-		/*for(int k=i-1; k>=0; --k)
-		{
-			const float x = m_group[k].position(0);
-			const float y = m_group[k].position(1);
-			const float z = m_group[k].position(2);
-			// Point is already a boid
-			if((x == m_mesh[i][0]) &&
-			   (y == m_mesh[i][1]) &&
-			   (z == m_mesh[i][2]))
-				continue;
-			Boid b(m_group.size());
-			for(unsigned int j=0; j<3; ++j)
-				b.setPosition(j, m_mesh[i][j]);
-			// Add this point as a new Boid
-			m_group.push_back(b);	
-		}*/
+		continue;
 	}
 }
 
-//Adapt mesh to be between 0 and 1
+// Adapt mesh to be between 0 and 1
 void Mesh::_adaptMesh()
 {
 	//Get max norm
@@ -110,30 +95,22 @@ void Mesh::_adaptMesh()
 	if(normVector[2] > std::max(normVector[0], normVector[1])) norm = normVector[2];
   
 	// Reduce mesh
-	for(unsigned int i=0; i<m_mesh.size(); ++i)
+	std::set< std::vector<float> >::iterator it;
+	std::set< std::vector<float> > reducedMesh;
+	for (it=m_mesh.begin(); it!=m_mesh.end(); ++it)
 	{
+		std::vector<float> reducedPoint;
 		for(unsigned int j=0; j<3; ++j)
-			m_mesh[i][j] /= norm;
+			reducedPoint.push_back(it->at(j)/ norm);
+		reducedMesh.insert(reducedPoint);
 	}
+	m_mesh.clear();
+	m_mesh = reducedMesh;
 }
 
-//Move : do nothing
+// Move : do nothing
+//@WARNING virtual function, needs to be overwritten
 void Mesh::move()
 {
-}
+} 
 
-//Draw function OpenGL
-void Mesh::brutalDraw()
-{
-	std::cout << "brutal Draw - "<< m_type << "(" << \
-				m_group.size() <<")"<< std::endl;
-	/*
-	for(unsigned int i=0; i<m_group.size(); ++i)
-	{
-		float x = m_group[i].position(0);
-		float y = m_group[i].position(1);
-		float z = m_group[i].position(2);
-		
-		glVertex3d(x,y,z);
-	}*/
-}
