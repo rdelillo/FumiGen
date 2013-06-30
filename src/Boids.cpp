@@ -63,7 +63,8 @@ Boids::Boids(Figure* b)
 			" already a Boids system" << std::endl;
 
 	m_type = "BOIDS_SYSTEM_FROM_" + b->type();
-	for(unsigned int i=0; i<b->size(); ++i)
+	//@WARNING use an int to prevent from warning
+	for(int i=0; i<b->size(); ++i)
 	{
 		Boid newBoid(i);
 		for(unsigned int idx=0; idx<3; ++idx)

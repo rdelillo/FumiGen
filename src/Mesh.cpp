@@ -35,8 +35,8 @@ void Mesh::_loadDataFromFile()
 		// Double check file content is OK
 		if(m_model->meshes[iMesh]->nfaces <= 1)                              
 		{
-			std::cout << "Error file content is wrong" << std::endl;
-			exit(2);
+			std::cout << "Warning empty mesh in file" << std::endl;
+			continue;
 		}
 		m_refMesh = m_model->meshes[iMesh];
 		m_nbFaces = m_refMesh->nfaces;

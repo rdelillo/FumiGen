@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 
 	// Creation of the figure to store
 	application->addFigure(new Boids(30));
-	application->addFigure(new Mesh("/home/robin/Bureau/Projet/obj/simba3ds.3DS"));	
+	application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/essai.3ds"));	
 
 	// Render Loop
 	application->eventLoop();
