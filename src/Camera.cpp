@@ -9,7 +9,7 @@ Camera::Camera()
 	for(unsigned int i=0; i<3; ++i)
 		m_position.push_back(0.0f);
 	m_position[0] = 0.0f;
-	m_position[1] = 0.0f;
+	m_position[1] = 0.70f;
 	m_position[2] = 0.0f;
 
 	// Initial parameters

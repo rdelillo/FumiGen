@@ -59,8 +59,7 @@ Boids::Boids(Figure* b)
 {
 	// Check if given Figure is already a Boids system
 	if(b->type() == "BOIDS_SYSTEM")
-		std::cout << "WARNNING given figure is" \ 
-			" already a Boids system" << std::endl;
+		std::cout << "WARNNING given figure i already a Boids system" << std::endl;
 
 	m_type = "BOIDS_SYSTEM_FROM_" + b->type();
 	//@WARNING use an int to prevent from warning

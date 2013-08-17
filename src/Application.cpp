@@ -287,6 +287,7 @@ void Application::drawFrame()
 	glMatrixMode(GL_MODELVIEW);
 	float modelView[16];
 	glLoadMatrixf(m_camera.getViewf(modelView));
+	//tool_debug::printMatrix(m_camera.view());
 
 	// Usuals draw settings
 	glPointSize(1.5f);
