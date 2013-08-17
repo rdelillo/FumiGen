@@ -17,7 +17,7 @@
 class Mesh : public Figure
 {
 private :
-	//Attributes
+	// Attributes
 	Lib3dsFile * m_model;           		// Model (analyzed 3DS file)
 	Lib3dsMesh * m_refMesh;				// Mesh reference
 	int m_nbFaces;					// Number of faces of the Mesh	
@@ -28,11 +28,19 @@ private :
 	//@WARNING to keep ?
 	// It would be usefull to store them
 	// for the potential renderman shaders	
-	std::vector< std::vector<float> > m_roughMesh;  // rough mesh	
+	std::vector< std::vector<float> > m_roughMesh;  	// rough mesh
+
+	// Animation attributes
+	int m_currentFrame;						// current frame (default 0)	
+	std::vector< std::set< std::vector<float> > > m_meshes;		// mesh per frame
+	std::vector< std::vector< std::vector<float> > > m_roughMeshes; // roughMesh per frame
+	
 public :
 	// Builder
-	// Construct a Mesh from an obj file
+	// Construct a Mesh from a 3ds file
 	Mesh(const std::string filename);
+	// Construct a Mesh from a 3ds file sequence
+	Mesh(const std::string filepath, const int start, const int end);
 
 	// Move the Mesh (animation)
 	void move();
@@ -45,7 +53,9 @@ private:
 	// Generate boid field	
 	void _generateBoidsFromMesh();
 	// Adapt mesh to be between 0 and 1
-	void _adaptMesh();                    
+	void _adaptMesh();    
+	// Check given file path
+	const bool _checkFilePath(const std::string fileName);                
 };
 
 #endif // __MESH_HPP__

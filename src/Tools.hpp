@@ -44,6 +44,17 @@ namespace tool_camera
 	void manageFps(const Application& app, Camera& camera);
 }
 
+namespace tool_filesystem
+{
+	// Open 3ds file sequence
+	//void open3dsFiles();
+	
+	// Brute open 3ds file sequence since the boost
+	// file system library does not appear to work
+	// on my station (linking issues)
+	std::vector<std::string> brute_open3dsFiles(const std::string& path, const int start_seq, const int end_seq);
+}
+
 namespace tool_debug
 {
 	//Print a matrix on shell

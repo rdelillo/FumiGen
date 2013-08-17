@@ -4,191 +4,196 @@
 #include "Camera.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <string.h>
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <set>
+
+// Linking issues with Boost
+// #include <boost/filesystem.hpp>
+// #include <boost/algorithm/string/predicate.hpp>
 
 namespace tool_geometry 
 {
-
-// To normalize a vector
-void normalize (std::vector<float>& v)
-{
-	// Compute norm of the vector
-	float norm = 0.0f;
-	for(unsigned int idx=0; idx<3; ++idx)
-		norm += pow(v[idx],2);
-	norm = sqrt(norm);
-	
-	// Normalize the vector
-	if (norm != 0.0f)
+	// To normalize a vector
+	void normalize (std::vector<float>& v)
 	{
+		// Compute norm of the vector
+		float norm = 0.0f;
 		for(unsigned int idx=0; idx<3; ++idx)
-			v[idx] /= norm;
-	}
-}
-
-// To get the vector product
-const std::vector<float> vectorProduct (const std::vector<float>& a,
-					const std::vector<float>& b)
-{
-	std::vector<float> result;
-	result.push_back(a[1]*b[2] - a[2]*b[1]);
-	result.push_back(a[2]*b[0] - a[0]*b[2]);
-	result.push_back(a[0]*b[1] - a[1]*b[0]);
-	return result;
-}
-
-// Does the multiplication A=A*B : all the matrices are described column-major
-void multMatrixBtoMatrixA(std::vector<float>& A, const std::vector<float>& B)
-{
-	int i = 0; 				// row index
-	int j = 0; 				// column index
-	std::vector<float> temp;		// temp values
-	for(unsigned int i=0; i<16; ++i)
-		temp.push_back(0.0f);
-    
-	for(unsigned int idx=0 ; idx<16 ; ++idx)
-	{
-		temp[idx] = 0.0f;
-		i = idx%4;
-		j = idx/4;
-
-		for(unsigned int k=0 ; k<4 ; ++k)
+			norm += pow(v[idx],2);
+		norm = sqrt(norm);
+	
+		// Normalize the vector
+		if (norm != 0.0f)
 		{
-			const int idxA = k*4 + i;
-			const int idxB = j*4 + k;
-			temp[idx]+=A[idxA] * B[idxB];
+			for(unsigned int idx=0; idx<3; ++idx)
+				v[idx] /= norm;
 		}
 	}
-	// Recopy temp into A
-	for(unsigned int i=0 ; i<16 ; ++i)
-		A[i] = temp[i];
-}
 
-// Sets the provided matrix to identity
-void setToIdentity(std::vector<float>& matrix)
-{
-	float Id[] = {	1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0, 
-			0.0, 0.0, 1.0, 0.0, 
-		 	0.0, 0.0, 0.0, 1.0
-		     };
-	
-	for(unsigned int i=0 ; i<16 ; ++i)
-		matrix[i] = Id[i];
-}
-
-// Sets the provided matrix to a translate matrix on vector t
-void setToTranslate(std::vector<float>& matrix, const std::vector<float>& t)
-{
-	float T[] = {	1.0,   0.0,   0.0,   0.0,
-		 	0.0,   1.0,   0.0,   0.0,
-		 	0.0,   0.0,   1.0,   0.0,
-		 	t[0],  t[1],  t[2],  1.0
-		    };
- 
-    	for(unsigned int i=0 ; i<16 ; ++i)
-        	matrix[i] = T[i];
-}
-
-// Sets the provided matrix to a scale matrix by coeficients in s
-void setToScale(std::vector<float>& matrix, const std::vector<float>& s)
-{
-    	float S[] = {	s[0], 0.0,  0.0,  0.0,
-                 	0.0,  s[1], 0.0,  0.0,
-                 	0.0,  0.0,  s[2], 0.0,
-                 	0.0,  0.0,  0.0,  1.0
-		    };  
-    
-	for(unsigned int i=0 ; i<16 ; ++i)
-	        matrix[i] = S[i];
-}
-
-// Sets the provided matrix to a rotate matrix of angle "angle", around axis "axis"
-void setToRotate(std::vector<float>& matrix, const float angle,
-					     const std::vector<float>& axis)
-{
-	const float c = cos(angle);
-	const float s = sin(angle);
-	const float x = axis[0]; 
-	const float y = axis[1]; 
-	const float z = axis[2];
-	float* R;
-
-	// Rotation on X axis
-	if((x==1.0f) && (y==0.0f) && (z==0.0f))
+	// To get the vector product
+	const std::vector<float> vectorProduct (const std::vector<float>& a,
+						const std::vector<float>& b)
 	{
-		float RX[] = {	1.0, 0.0, 0.0, 0.0, 
-			     	0.0, c,   s,   0.0, 
-			     	0.0, -s,  c,   0.0, 
-			     	0.0, 0.0, 0.0, 1.0
-			     };
-		R = RX;
+		std::vector<float> result;
+		result.push_back(a[1]*b[2] - a[2]*b[1]);
+		result.push_back(a[2]*b[0] - a[0]*b[2]);
+		result.push_back(a[0]*b[1] - a[1]*b[0]);
+		return result;
 	}
-	// Rotation on Y axis
-	else if ((x==0.0f) && (y==1.0f) && (z==0.0f))
-	{                    
-	    	float RY[] = {	c,   0.0, -s,  0.0, 
-		         	0.0, 1.0, 0.0, 0.0, 
-		         	s,   0.0, c,   0.0, 
-		         	0.0, 0.0, 0.0, 1.0
-			     };
-		R = RY;
-	}
-	// Rotation on Z axis
-	else if ((x==0.0f) && (y==0.0f) && (z==1.0f))
-	{                                          
-		float RZ[] = {	c,   s,   0.0, 0.0, 
-		             	-s,  c,   0.0, 0.0, 
-		             	0.0, 0.0, 1.0, 0.0, 
-		             	0.0, 0.0, 0.0, 1.0
-			     };
-		R = RZ;
-	}
-	// Rotation on non-standard axis
-	else
+
+	// Does the multiplication A=A*B : all the matrices are described column-major
+	void multMatrixBtoMatrixA(std::vector<float>& A, const std::vector<float>& B)
 	{
-		float ROther[] = {	(1.0f-c)*(x*x-1.0f) + 1.0f, (1.0f-c)*x*y + (z*s),       (1.0f-c)*x*z - (y*s),       0.0f, 
-			      		(1.0f-c)*x*y - (z*s),       (1.0f-c)*(y*y-1.0f) + 1.0f, (1.0f-c)*y*z + (x*s),       0.0f, 
-			      		(1.0f-c)*x*z + (y*s),       (1.0f-c)*y*z - (x*s),       (1.0f-c)*(z*z-1.0f) + 1.0f, 0.0f, 
-			      		0.0f,                       0.0f,                       0.0f,                       1.0f
-				 };
-		R = ROther;
+		int i = 0; 				// row index
+		int j = 0; 				// column index
+		std::vector<float> temp;		// temp values
+		for(unsigned int i=0; i<16; ++i)
+			temp.push_back(0.0f);
+	    
+		for(unsigned int idx=0 ; idx<16 ; ++idx)
+		{
+			temp[idx] = 0.0f;
+			i = idx%4;
+			j = idx/4;
+
+			for(unsigned int k=0 ; k<4 ; ++k)
+			{
+				const int idxA = k*4 + i;
+				const int idxB = j*4 + k;
+				temp[idx]+=A[idxA] * B[idxB];
+			}
+		}
+		// Recopy temp into A
+		for(unsigned int i=0 ; i<16 ; ++i)
+			A[i] = temp[i];
 	}
+
+	// Sets the provided matrix to identity
+	void setToIdentity(std::vector<float>& matrix)
+	{
+		float Id[] = {	1.0, 0.0, 0.0, 0.0,
+				0.0, 1.0, 0.0, 0.0, 
+				0.0, 0.0, 1.0, 0.0, 
+			 	0.0, 0.0, 0.0, 1.0
+			     };
 	
-	for(unsigned int i=0; i<16; ++i)
-		matrix[i] = R[i];
-}
+		for(unsigned int i=0 ; i<16 ; ++i)
+			matrix[i] = Id[i];
+	}
 
-// Builds a perspective projection matrix and stores it in mat
-// l = left,
-// r = right,
-// b = bottom,
-// t = top,
-// n = near,
-// f = far in the frustum
-const std::vector<float> setPerspective(const float l, const float r, const float b,
-					const float t, const float n, const float f)
-{
-	std::vector<float> mat;
-	float P[] = {	(2*n)/(r-l), 	0.0, 		0.0, 		0.0,
-		 	0.0, 		(2*n)/(t-b), 	0.0, 		0.0,
-		 	(r+l)/(r-l), 	(t+b)/(t-b), 	-(f+n)/(f-n), 	-1.0,
-		 	0.0, 		0.0, 		0.0, 		0.0
-		    };
+	// Sets the provided matrix to a translate matrix on vector t
+	void setToTranslate(std::vector<float>& matrix, const std::vector<float>& t)
+	{
+		float T[] = {	1.0,   0.0,   0.0,   0.0,
+			 	0.0,   1.0,   0.0,   0.0,
+			 	0.0,   0.0,   1.0,   0.0,
+			 	t[0],  t[1],  t[2],  1.0
+			    };
+	 
+	    	for(unsigned int i=0 ; i<16 ; ++i)
+			matrix[i] = T[i];
+	}
 
-    	for(unsigned int i=0 ; i<16 ; ++i)
-        	mat.push_back(P[i]);
-	return mat;
-}
-} //namespace
+	// Sets the provided matrix to a scale matrix by coeficients in s
+	void setToScale(std::vector<float>& matrix, const std::vector<float>& s)
+	{
+	    	float S[] = {	s[0], 0.0,  0.0,  0.0,
+		         	0.0,  s[1], 0.0,  0.0,
+		         	0.0,  0.0,  s[2], 0.0,
+		         	0.0,  0.0,  0.0,  1.0
+			    };  
+	    
+		for(unsigned int i=0 ; i<16 ; ++i)
+			matrix[i] = S[i];
+	}
+
+	// Sets the provided matrix to a rotate matrix of angle "angle", around axis "axis"
+	void setToRotate(std::vector<float>& matrix, const float angle,
+						     const std::vector<float>& axis)
+	{
+		const float c = cos(angle);
+		const float s = sin(angle);
+		const float x = axis[0]; 
+		const float y = axis[1]; 
+		const float z = axis[2];
+		float* R;
+
+		// Rotation on X axis
+		if((x==1.0f) && (y==0.0f) && (z==0.0f))
+		{
+			float RX[] = {	1.0, 0.0, 0.0, 0.0, 
+				     	0.0, c,   s,   0.0, 
+				     	0.0, -s,  c,   0.0, 
+				     	0.0, 0.0, 0.0, 1.0
+				     };
+			R = RX;
+		}
+		// Rotation on Y axis
+		else if ((x==0.0f) && (y==1.0f) && (z==0.0f))
+		{                    
+		    	float RY[] = {	c,   0.0, -s,  0.0, 
+				 	0.0, 1.0, 0.0, 0.0, 
+				 	s,   0.0, c,   0.0, 
+				 	0.0, 0.0, 0.0, 1.0
+				     };
+			R = RY;
+		}
+		// Rotation on Z axis
+		else if ((x==0.0f) && (y==0.0f) && (z==1.0f))
+		{                                          
+			float RZ[] = {	c,   s,   0.0, 0.0, 
+				     	-s,  c,   0.0, 0.0, 
+				     	0.0, 0.0, 1.0, 0.0, 
+				     	0.0, 0.0, 0.0, 1.0
+				     };
+			R = RZ;
+		}
+		// Rotation on non-standard axis
+		else
+		{
+			float ROther[] = {(1.0f-c)*(x*x-1.0f) + 1.0f, (1.0f-c)*x*y + (z*s),       (1.0f-c)*x*z - (y*s),       0.0f, 
+				      	  (1.0f-c)*x*y - (z*s),       (1.0f-c)*(y*y-1.0f) + 1.0f, (1.0f-c)*y*z + (x*s),       0.0f, 
+				      	  (1.0f-c)*x*z + (y*s),       (1.0f-c)*y*z - (x*s),       (1.0f-c)*(z*z-1.0f) + 1.0f, 0.0f, 
+				      	  0.0f,                       0.0f,                       0.0f,                       1.0f
+					 };
+			R = ROther;
+		}
+	
+		for(unsigned int i=0; i<16; ++i)
+			matrix[i] = R[i];
+	}
+
+	// Builds a perspective projection matrix and stores it in mat
+	// l = left,
+	// r = right,
+	// b = bottom,
+	// t = top,
+	// n = near,
+	// f = far in the frustum
+	const std::vector<float> setPerspective(const float l, const float r, const float b,
+						const float t, const float n, const float f)
+	{
+		std::vector<float> mat;
+		float P[] = {	(2*n)/(r-l), 	0.0, 		0.0, 		0.0,
+			 	0.0, 		(2*n)/(t-b), 	0.0, 		0.0,
+			 	(r+l)/(r-l), 	(t+b)/(t-b), 	-(f+n)/(f-n), 	-1.0,
+			 	0.0, 		0.0, 		0.0, 		0.0
+			    };
+
+	    	for(unsigned int i=0 ; i<16 ; ++i)
+			mat.push_back(P[i]);
+		return mat;
+	}
+//namespace
+} 
 
 
 namespace tool_camera
 {
-
 	// Draw the color triangle to test display
 	void drawTestSample()
 	{
@@ -290,7 +295,64 @@ namespace tool_camera
 			camera.setPosition(i, cameraNewPos[i]);
 		}
 	}
+// namespace
+}
 
+namespace tool_filesystem
+{
+	/*
+	// Open 3ds file sequence
+	std::vector<std::string> open3dsFiles(const std::string& path)
+	{
+		std::vector<std::string> match_files;
+		// Check if given file is a file
+		boost::filesystem::path _p(path.c_str());
+		// Providen path does not exist
+		if(!boost::filesystem::exists(_p))
+			std::cout << "Invalid given path to construct mesh " << path << std::endl;
+		// Providen path is a single file
+		else if(boost::filesystem::is_regular_file(_p))
+			match_files.push_back(path);
+		// Providen path is a directory
+		// Try to find all of the 3ds files inside it
+		else if(boost::filesystem::is_directory(_p))
+		{
+			// Sort the files found base on name
+        		std::vector<boost::filesystem::path> sorted_paths;
+        		copy(boost::filesystem::directory_iterator(_p),
+			     boost::filesystem::directory_iterator(),
+			     std::back_inserter(sorted_paths));
+        		std::sort(sorted_paths.begin(), sorted_paths.end()); 
+			// From stackoverflow 
+			for(unsigned int i=0; i<sorted_paths.size(); ++i)
+			{
+				std::string filename= sorted_paths[i].generic_string();
+				// Check found file is OK finishing with the 3ds extension
+				if(boost::algorithm::ends_with(filename,".3ds"))
+					match_files.push_back(filename);
+			}
+		}
+		return match_files;
+	}
+	*/
+
+	// Brute open 3ds file sequence since the boost
+	// file system library does not appear to work
+	// on my station (linking issues)
+	std::vector<std::string> brute_open3dsFiles(const std::string& path, const int start_seq, const int end_seq)
+	{
+		std::vector<std::string> match_files;
+		for(int i=start_seq; i<=end_seq; ++i)
+		{
+			std::string temp_path = path;
+			std::ostringstream oss;
+			// Force a pad 4 to the number
+			oss << std::setfill('0') << std::setw(4) << i;
+			temp_path += "."+ oss.str() + ".3ds";
+			match_files.push_back(temp_path);
+		} 
+		return match_files;
+	}
 // namespace
 }
 

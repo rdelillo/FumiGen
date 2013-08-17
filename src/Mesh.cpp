@@ -1,5 +1,6 @@
 #include "Mesh.hpp"
 #include "Boid.hpp"
+#include "Tools.hpp"
 
 #include <algorithm>
 
@@ -8,25 +9,53 @@
 Mesh::Mesh(const std::string fileName):
 m_model(NULL),
 m_refMesh(NULL),
-m_nbFaces(0)
+m_nbFaces(0),
+m_currentFrame(0)
 {
 	m_type = "3D_MESH";
-	m_model = lib3ds_file_open(fileName.c_str());
-	// Verify the model
-	if(!m_model)                                                                 	
-	{
-		std::cout << "Error : unable to load the given file" << std::endl;
-		exit(2);
-	}
+	_checkFilePath(fileName);
 	// File is OK, load the model and construct the mesh
 	_loadDataFromFile();
 	_adaptMesh();                                                     
+	_generateBoidsFromMesh();
+	// Add to the container per frame
+	// There is only 1 entry since the model does not move
+	m_meshes.push_back(m_mesh);
+	m_roughMeshes.push_back(m_roughMesh);
+}
+
+// Construct a Mesh from a 3ds file sequence
+Mesh::Mesh(const std::string filepath, const int start, const int end):
+m_model(NULL),
+m_refMesh(NULL),
+m_nbFaces(0),
+m_currentFrame(0)
+{
+	m_type = "3D_MESH";
+	std::vector<std::string> files = tool_filesystem::brute_open3dsFiles(filepath, start, end);
+	for(unsigned int i=0; i<files.size(); ++i)
+	{
+		_checkFilePath(files[i]);
+		// File is OK, load the model and construct the mesh
+		_loadDataFromFile();
+		_adaptMesh();                                                     
+		// Add to the container per frame
+		// There is only 1 entry since the model does not move
+		m_meshes.push_back(m_mesh);
+		m_roughMeshes.push_back(m_roughMesh);
+	}
+	// Put back the reader at top 
+	m_roughMesh = m_roughMeshes.at(0);
+	m_mesh = m_meshes.at(0);
 	_generateBoidsFromMesh();
 }
 
 // Load Mesh data from file
 void Mesh::_loadDataFromFile()
 {
+	// Pre-clean functions
+	m_roughMesh.clear();
+	m_mesh.clear();
 	// Loop through all the meshes
 	// (better to keep 1 per file)
 	//@WARNING : do use an int for warning when build
@@ -67,10 +96,10 @@ void Mesh::_loadDataFromFile()
 // Generate boid field	
 void Mesh::_generateBoidsFromMesh()
 {
+	m_group.clear();
 	std::set< std::vector<float> >::iterator it;
 	for (it=m_mesh.begin(); it!=m_mesh.end(); ++it)
 	{
-		//@TODO: optimize the mesh
 		// Always add the first one
 		Boid b(0);			
 		for(unsigned int j=0; j<3; ++j)
@@ -112,5 +141,27 @@ void Mesh::_adaptMesh()
 //@WARNING virtual function, needs to be overwritten
 void Mesh::move()
 {
+	++m_currentFrame;
+	if((unsigned int)m_currentFrame < m_meshes.size())
+	{
+		m_roughMesh = m_roughMeshes.at(m_currentFrame);
+		m_mesh = m_meshes.at(m_currentFrame);
+		_generateBoidsFromMesh();
+	}
+	else
+		m_currentFrame = 0;
 } 
+
+// Check given file path
+const bool Mesh::_checkFilePath(const std::string fileName)
+{
+	m_model = lib3ds_file_open(fileName.c_str());
+	// Verify the model
+	if(!m_model)                                                                 	
+	{
+		std::cout << "Error : unable to load the given file" << fileName << std::endl;
+		exit(2);
+	}
+	return true;
+}
 
