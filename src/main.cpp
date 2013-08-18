@@ -21,8 +21,8 @@ int main(int argc, char **argv)
 	Application* application = createApplication();
 
 	// Creation of the figure to store
-	//application->addFigure(new Boids(30));
-	//application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/essai.3ds"));	
+	application->addFigure(new Boids(30));
+	application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/essai.3ds"));	
 	application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/scene_3ds/scene", 0, 24));	
 	// Render Loop
 	application->eventLoop();

@@ -44,6 +44,8 @@ void Application::initApplication()
 	//Move counter
 	_cntMove=0;
 	_cameraMode = 2; //FPS camera
+	// Initialize the projection matrix
+	m_camera.setPerspectiveFromAngle();
 
 	//Mouse is not going to leave the window
 	//Mouse won't be seeable
@@ -76,8 +78,10 @@ void Application::initDisplay()
 	// Specifies the size and other options about the OpenGL window
 	_drawContext = SDL_SetVideoMode(_windowWidth, _windowHeight, 0, _videoModeFlags); 
 
-	// Depth test
+	// Depth and Alpha test
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND); 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	// Decides the background color used after this call
 	glClearColor(_backgroundColor[0], _backgroundColor[1], _backgroundColor[2], _backgroundColor[3]);
 	// Sets the with of the lines
@@ -281,13 +285,13 @@ void Application::drawFrame()
 	std::cout << "\nDRAW - FRAME : " << _cntMove << std::endl;
 
 	// Sets the matrix mode
+	//@WARNING : Need a float* for modelview and projection in OpenGL
 	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity();
-	//@WARNING : Need a float* for modelview in OpenGL
+	float projection[16];
+	glLoadMatrixf(m_camera.getProjectionf(projection));
 	glMatrixMode(GL_MODELVIEW);
 	float modelView[16];
 	glLoadMatrixf(m_camera.getViewf(modelView));
-	//tool_debug::printMatrix(m_camera.view());
 
 	// Usuals draw settings
 	glPointSize(1.5f);
@@ -301,7 +305,7 @@ void Application::drawFrame()
 		m_figures[i]->brutalDraw();
 	glEnd();
 	
-	//tool_camera::drawTestSample();
+	tool_camera::drawTestScene();
 	//</DRAW HERE>
   
 	// Performs the buffer swap between the current shown buffer

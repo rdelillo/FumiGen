@@ -40,6 +40,8 @@ namespace tool_camera
 {
 	// Draw the color triangle to test display
 	void drawTestSample();
+	// Draw a simple color scene to test display
+	void drawTestScene();
 	// Update the camera values according to keyboard, mouse
 	void manageFps(const Application& app, Camera& camera);
 }

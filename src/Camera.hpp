@@ -34,13 +34,14 @@ public :
 	// Update the projection matrix
         void updateProjection();
 	// Change camera perspective
-        void setPerspectiveFromAngle(const float fovy, const float aspectRatio);
+        void setPerspectiveFromAngle(const float fovy=0.75, const float aspectRatio=1.777);
 	// Update the camera target
         void lookAt(const std::vector<float>& aim, const std::vector<float>& up);
 
 	// Utils
 	// Get camera matrix as float* for openGL
 	float* getViewf(float* modelView);
+	float* getProjectionf(float* projection);
 	
 	// Get/set
 	// View matrix

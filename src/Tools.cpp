@@ -204,11 +204,48 @@ namespace tool_camera
 		glEnd();
 	}
 
+	// Draw a simple color scene to test display
+	void drawTestScene()
+	{
+		// Floor 
+		glBegin(GL_QUADS);
+		glColor4ub(255, 0, 0, 100); 
+		glVertex3d(-10.0f, 0.0f, -10.0f);
+		glVertex3d(10.0f, 0.0f, -10.0f);
+		glVertex3d(10.0f, 0.0f, 10.0f);
+		glVertex3d(-10.0f, 0.0f, 10.0f);
+		glEnd();
+		// Top
+		glBegin(GL_QUADS);
+		glColor4ub(0, 255, 0, 100); 
+		glVertex3d(-3.0f, 0.0f, -10.0f);
+		glVertex3d(-3.0f, 3.0f, -10.0f);
+		glVertex3d(3.0f, 3.0f, -10.0f);
+		glVertex3d(3.0f, 0.0f, -10.0f);
+		glEnd();
+		// Left
+		glBegin(GL_QUADS);
+		glColor4ub(0, 0, 255, 100); 
+		glVertex3d(-10.0f, 0.0f, -3.0f);
+		glVertex3d(-10.0f, 3.0f, -3.0f);
+		glVertex3d(-10.0f, 3.0f, 3.0f);
+		glVertex3d(-10.0f, 0.0f, 3.0f);
+		glEnd();
+		// Center
+		glBegin(GL_QUADS);
+		glColor4ub(255, 255, 255, 100); 
+		glVertex3d(-0.5f, 0.5f, -0.5f);
+		glVertex3d(0.5f, 0.5f, -0.5f);
+		glVertex3d(0.5f, 0.5f, 0.5f);
+		glVertex3d(-0.5f, 0.5f, 0.5f);
+		glEnd();
+	}
+
 	// Update the camera values according to keyboard, mouse
 	void manageFps(const Application& app, Camera& camera)
 	{
 		// Work variables
-		const float SPEED_MOVE = 0.5f;
+		const float SPEED_MOVE = 0.25f;
 		std::vector<float> appFlags;
 		std::vector<float> cameraNewPos;
 		std::vector<float> inverseCameraPos;

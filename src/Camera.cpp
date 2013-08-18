@@ -40,7 +40,7 @@ Camera::Camera()
 	m_bottom = -l;
 	m_top = l;
 	m_near = 0.01;
-	m_far = m_near + 100.0*l;
+	m_far = 100.0f*l;
 	
 	// Set default values to the matrices
 	tool_geometry::setToIdentity(m_projection);
@@ -145,11 +145,19 @@ void Camera::setPerspectiveFromAngle(const float fovy, const float aspectRatio)
 
 // Utils
 // Get camera position as float* for OpenGl
+// View matrix
 float* Camera::getViewf(float* modelView)
 {
 	for(unsigned int i=0; i<16; ++i)
 		modelView[i] = m_view[i];
 	return modelView;
+}
+// Projection matrix
+float* Camera::getProjectionf(float* projection)
+{
+	for(unsigned int i=0; i<16; ++i)
+		projection[i] = m_projection[i];
+	return projection;
 }	
 
 // Get/set
