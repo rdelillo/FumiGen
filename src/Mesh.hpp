@@ -1,15 +1,13 @@
 #ifndef __MESH_HPP__
 #define __MESH_HPP__
 
+#include <lib3ds.h>
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <set>
 #include "math.h"
-
-//#include <API/lib3ds/include/lib3ds.h>
-#include <lib3ds.h>
 
 #include "Figure.hpp"
 #include "Boid.hpp"

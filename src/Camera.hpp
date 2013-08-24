@@ -2,6 +2,7 @@
 #define __CAMERA_HPP__
 
 #include <vector>
+#include <string>
 
 class Camera
 {
@@ -24,9 +25,17 @@ private :
         std::vector<float> m_view;	// view matrix
         std::vector<float> m_projection;// projection matrix
 
+	// Animation parameters
+	//@TODO: temporary stored the Play/Pause flag into camera, will
+	// need to be moved into Application
+	std::string m_cameraMode;			// FPS or PLAY
+	unsigned int m_currentFrame;				// current frame displayed on screen
+	std::vector< std::vector<float> > m_views; 	// view matrixes from 3ds files sequence
+
 public :
 	// Builder
         Camera();
+	Camera(const std::string filepath, const int start, const int end);
 
 	// Update the Camera
 	// Update the view matrix
@@ -38,12 +47,20 @@ public :
 	// Update the camera target
         void lookAt(const std::vector<float>& aim, const std::vector<float>& up);
 
+	// Animate the Camera from 3ds file sequence
+	// Switch camera to PLAY mode (will automatically go back to FPS at the end)
+	void startPlayMode();
+	// Move the camera based on mode
+	void move();
+
 	// Utils
 	// Get camera matrix as float* for openGL
 	float* getViewf(float* modelView);
 	float* getProjectionf(float* projection);
 	
 	// Get/set
+	// Camera mode
+	const std::string getMode() const;
 	// View matrix
 	std::vector<float>& view();
 	// Position
@@ -58,6 +75,9 @@ public :
 	// Z axis
 	const float zAxis(const int i) const;
 	void setZAxis(const int i, const float value);
+private:
+	// Init camera with default values and first computations
+	void _init();
 };
 
 

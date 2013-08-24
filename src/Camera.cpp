@@ -3,7 +3,26 @@
 #include <math.h>
 
 // Builder
-Camera::Camera()
+Camera::Camera():
+m_cameraMode("FPS"),
+m_currentFrame(0)
+{
+	_init();
+}
+
+Camera::Camera(const std::string filepath, const int start, const int end):
+m_cameraMode("FPS"),
+m_currentFrame(0)
+{
+	_init();
+	// Load 3ds file sequence
+	std::vector<std::string> files = tool_filesystem::brute_open3dsFiles(filepath, start, end);
+	for(unsigned int i=0; i<files.size(); ++i)
+		m_views.push_back(tool_camera::getModelviewFrom3dsFile(files[i]));
+}
+
+// Init camera with default values and first computations
+void Camera::_init()
 {
 	// Initial position
 	for(unsigned int i=0; i<3; ++i)
@@ -143,6 +162,33 @@ void Camera::setPerspectiveFromAngle(const float fovy, const float aspectRatio)
 	updateProjection();
 }
 
+// Animate the Camera from 3ds file sequence
+// Switch camera to PLAY mode (will automatically go back to FPS at the end)
+void Camera::startPlayMode()
+{
+	if( m_cameraMode == "FPS")
+		m_cameraMode = "PLAY";
+	m_currentFrame = 0;		
+}
+
+// Move the camera based on mode
+void Camera::move()
+{
+	if(m_currentFrame < m_views.size())
+	{
+		// Read the next position from the 
+		// registered camera positions
+		m_view = m_views[m_currentFrame];
+		++m_currentFrame;
+	}
+	else
+	{
+		if( m_cameraMode != "FPS")
+			m_cameraMode = "FPS";	
+		m_currentFrame = 0;
+	}
+}
+
 // Utils
 // Get camera position as float* for OpenGl
 // View matrix
@@ -203,4 +249,9 @@ const float Camera::zAxis(const int i) const
 void Camera::setZAxis(const int i, const float value)
 {
 	m_zAxis[i] = value;
+}
+// Camera mode
+const std::string Camera::getMode() const
+{
+	return m_cameraMode;
 }

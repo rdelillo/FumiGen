@@ -34,7 +34,6 @@ private :
 	float _xMousePosition; 					// Mouse position - horizontal axis
 	float _yMousePosition; 					// mouse position - vertical axis
 	float _moveFlags[3];
-	GLfloat _cameraMode;
 	
 	// Keyboard parameters
 	bool m_goingLeft;					// is going left
@@ -46,7 +45,7 @@ private :
 	std::vector<Figure*> m_figures;				// Contains all of the figures defined
 
 	//Others
-	Camera m_camera;					// the FPS camera
+	Camera * m_camera;					// the FPS camera
 	unsigned int _cntMove; 					// Move counter
 	bool _done; 						// set to true when the window is closed or to end the application
 
@@ -101,6 +100,8 @@ public :
 	// FIGURES MANAGEMENT
 	// Add a new figure to the Application
 	void addFigure(Figure* f);
+	// Set the camera of the Application
+	void defineCamera(Camera* camera);
 
 private :
 	// Remove un-needed figures

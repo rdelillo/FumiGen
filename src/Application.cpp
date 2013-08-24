@@ -13,7 +13,8 @@ _yMousePosition(0.0),
 m_goingLeft(false),
 m_goingRight(false),
 m_goingForward(false),
-m_goingBackward(false)
+m_goingBackward(false),
+m_camera(NULL)
 {
 	//Fill up move values
 	_moveFlags[0]=0.0;
@@ -43,9 +44,8 @@ void Application::initApplication()
 
 	//Move counter
 	_cntMove=0;
-	_cameraMode = 2; //FPS camera
 	// Initialize the projection matrix
-	m_camera.setPerspectiveFromAngle();
+	m_camera->setPerspectiveFromAngle();
 
 	//Mouse is not going to leave the window
 	//Mouse won't be seeable
@@ -142,9 +142,8 @@ void Application::handleUserEvents(SDL_Event* event)
 		
 		// Refresh update (1sec)
 		case FREE_REFRESH_LOOP:
-			tool_camera::manageFps(*(this), m_camera);
-			// To print the deplacement matrix
-			//tool_debug::printMatrix(m_camera.view());
+			if(m_camera->getMode() == "FPS")
+				tool_camera::manageFps(*(this), m_camera);
 			break;
 
 		default:
@@ -185,6 +184,17 @@ void Application::handleKeyDownEvents(SDL_keysym* keysym)
 		case SDLK_b :
 			for(unsigned int i=0; i<m_figures.size(); ++i)
 				m_figures[i] = new Boids(m_figures[i]);
+			break;
+
+		// Space : launch play mode
+		//@TODO: update with the flag into application
+		case SDLK_SPACE :
+			m_camera->startPlayMode();
+			break;
+
+		// Camera info
+		case SDLK_c :
+			std::cout << "position : " << m_camera->position(0) << "," << m_camera->position(1) << "," <<  m_camera->position(2) << std::endl;
 			break;
 
 		// FPS management
@@ -288,10 +298,10 @@ void Application::drawFrame()
 	//@WARNING : Need a float* for modelview and projection in OpenGL
 	glMatrixMode (GL_PROJECTION);
 	float projection[16];
-	glLoadMatrixf(m_camera.getProjectionf(projection));
+	glLoadMatrixf(m_camera->getProjectionf(projection));
 	glMatrixMode(GL_MODELVIEW);
 	float modelView[16];
-	glLoadMatrixf(m_camera.getViewf(modelView));
+	glLoadMatrixf(m_camera->getViewf(modelView));
 
 	// Usuals draw settings
 	glPointSize(1.5f);
@@ -319,9 +329,17 @@ void Application::animate()
 	// Remove un-needed figures 
 	if(_cntMove%FREE_REFRESH_LOOP == 0)
 		_removeEmptyFigures();
-	// Animate the figures here
-	for(unsigned int i=0; i<m_figures.size(); ++i)
-		m_figures[i]->move();
+	// If in PLAY mode (no FPS)
+	if(m_camera->getMode() == "PLAY")
+	{
+		// Animate the camera if needed
+		m_camera->move();
+		// To print the deplacement matrix
+		tool_debug::printMatrix(m_camera->view());
+		// Animate the figures
+		for(unsigned int i=0; i<m_figures.size(); ++i)
+			m_figures[i]->move();
+	}
 }
 
 // Cleans before the application can be closed
@@ -330,6 +348,8 @@ void Application::deleteApplication()
 	// Free all of the figures
 	for(unsigned int i=0; i<m_figures.size(); ++i)
 		free(m_figures[i]);
+	// Free the camera
+	free(m_camera);
 	// Clean SDL quit
 	SDL_RemoveTimer(_renderTimer);
 	SDL_Quit();
@@ -339,6 +359,12 @@ void Application::deleteApplication()
 void Application::addFigure(Figure* f)
 {
 	m_figures.push_back(f);
+}
+
+// Set the camera of the Application
+void Application::defineCamera(Camera* camera)
+{
+	m_camera = camera;
 }
 
 // Remove un-needed figures (empty ones)

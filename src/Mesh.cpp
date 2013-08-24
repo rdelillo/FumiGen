@@ -83,6 +83,10 @@ void Mesh::_loadDataFromFile()
 			for(unsigned int idx=0; idx<3; ++idx)
 				point.push_back(m_refMesh->vertices[face->index[i]][idx]);
 
+			//@WARNING Lib3ds max introduce a switch from Y and 
+			point[1] = point[2];
+			point[2] = m_refMesh->vertices[face->index[i]][1];
+
 			// Use a set dramatically reduced the number of points
 			// Else the same point is stored for each face
 			m_mesh.insert(point);
@@ -141,12 +145,12 @@ void Mesh::_adaptMesh()
 //@WARNING virtual function, needs to be overwritten
 void Mesh::move()
 {
-	++m_currentFrame;
 	if((unsigned int)m_currentFrame < m_meshes.size())
 	{
 		m_roughMesh = m_roughMeshes.at(m_currentFrame);
 		m_mesh = m_meshes.at(m_currentFrame);
 		_generateBoidsFromMesh();
+		++m_currentFrame;
 	}
 	else
 		m_currentFrame = 0;

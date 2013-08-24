@@ -3,13 +3,14 @@
 #include "Figure.hpp"
 #include "Mesh.hpp"
 #include "Boids.hpp"
-//#include "Scene.hpp"
+#include "Camera.hpp"
 
 
 //Create an Application
-Application* createApplication()
+Application* createApplication(Camera * camera)
 {
 	Application* application = new Application(); 
+	application->defineCamera(camera);
 	application->initApplication();
 	return application;
 }
@@ -18,12 +19,14 @@ Application* createApplication()
 int main(int argc, char **argv)
 {
 	// Application creation
-	Application* application = createApplication();
+	Camera * camera = new Camera("/home/robin/Bureau/FumiGen/src/3ds/test_camera/scene", 0, 72);
+	//Camera * camera = new Camera();
+	Application* application = createApplication(camera);
 
 	// Creation of the figure to store
-	application->addFigure(new Boids(30));
-	application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/essai.3ds"));	
-	application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/scene_3ds/scene", 0, 24));	
+	//application->addFigure(new Boids(30));
+	//application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/essai.3ds"));	
+	application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/test_camera/scene", 0, 72));	
 	// Render Loop
 	application->eventLoop();
 
