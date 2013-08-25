@@ -4,6 +4,7 @@
 #include "Application.hpp"
 #include "Camera.hpp"
 
+#include <lib3ds.h>
 #include <string>
 #include <vector>
 
@@ -45,7 +46,7 @@ namespace tool_camera
 	// Update the camera values according to keyboard, mouse
 	void manageFps(const Application& app, Camera * camera);
 	// Import camera modelview from 3ds file
-	std::vector<float> getModelviewFrom3dsFile(const std::string &_file);
+	std::vector<float> getModelviewFrom3dsFile(const std::string& file);
 }
 
 namespace tool_filesystem
@@ -54,6 +55,8 @@ namespace tool_filesystem
 	// file system library does not appear to work
 	// on my station (linking issues)
 	std::vector<std::string> brute_open3dsFiles(const std::string& path, const int start_seq, const int end_seq);
+	// Import 3ds file with lib3ds and check it
+	Lib3dsFile * open3dsFile(const std::string& file);
 }
 
 namespace tool_debug

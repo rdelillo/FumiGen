@@ -51,9 +51,7 @@ private:
 	// Generate boid field	
 	void _generateBoidsFromMesh();
 	// Adapt mesh to be between 0 and 1
-	void _adaptMesh();    
-	// Check given file path
-	const bool _checkFilePath(const std::string fileName);                
+	void _adaptMesh();               
 };
 
 #endif // __MESH_HPP__

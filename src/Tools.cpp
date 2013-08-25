@@ -3,7 +3,6 @@
 #include "Application.hpp"
 #include "Camera.hpp"
 
-#include <lib3ds.h>
 #include <iostream>
 #include <iomanip>
 #include <string.h>
@@ -399,27 +398,19 @@ namespace tool_camera
 	}
 
 	// Import camera modelview from 3ds file
-	std::vector<float> getModelviewFrom3dsFile(const std::string &_file)
+	std::vector<float> getModelviewFrom3dsFile(const std::string& file)
 	{
 		// Load camera from 3ds file
 		Lib3dsCamera * camera;
-		Lib3dsFile * file =  lib3ds_file_open(_file.c_str());
-		// Verify the file
-		if(!file)                                                                 	
-		{
-			std::cout << "Error : unable to load the given file" 
-							<< _file << std::endl;
-			exit(2);
-		}
+		Lib3dsFile * l_file =  tool_filesystem::open3dsFile(file);
 		// Check it contains only 1 camera
-		if(file->ncameras != 1)
+		if(l_file->ncameras != 1)
 		{
-			std::cout << "Error : 3ds file " << _file << 
-				" contains " << file->ncameras << " camera(s)" << std::endl;
+			std::cout << "Error : 3ds file " << l_file << 
+				" contains " << l_file->ncameras << " camera(s)" << std::endl;
 			exit(2);
 		}
-
-		camera = file->cameras[0];
+		camera = l_file->cameras[0];
 
 		// Lib3ds invert Y and Z axis for some reasons
 		// Need to fix the value providen
@@ -455,6 +446,20 @@ namespace tool_filesystem
 			match_files.push_back(temp_path);
 		} 
 		return match_files;
+	}
+	
+	// Import 3ds file with lib3ds and check it
+	Lib3dsFile * open3dsFile(const std::string& file)
+	{
+		Lib3dsFile * l_file =  lib3ds_file_open(file.c_str());
+		// Verify the file
+		if(!l_file)                                                                 	
+		{
+			std::cout << "Error : unable to load the given file" 
+							<< l_file << std::endl;
+			exit(2);
+		}
+		return l_file;
 	}
 // namespace
 }

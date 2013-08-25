@@ -13,7 +13,7 @@ m_nbFaces(0),
 m_currentFrame(0)
 {
 	m_type = "3D_MESH";
-	_checkFilePath(fileName);
+	m_model = tool_filesystem::open3dsFile(fileName);
 	// File is OK, load the model and construct the mesh
 	_loadDataFromFile();
 	//_adaptMesh();                                                     
@@ -35,7 +35,7 @@ m_currentFrame(0)
 	std::vector<std::string> files = tool_filesystem::brute_open3dsFiles(filepath, start, end);
 	for(unsigned int i=0; i<files.size(); ++i)
 	{
-		_checkFilePath(files[i]);
+		m_model = tool_filesystem::open3dsFile(files[i]);
 		// File is OK, load the model and construct the mesh
 		_loadDataFromFile();
 		//_adaptMesh();                                                     
@@ -154,17 +154,4 @@ void Mesh::move()
 	else
 		m_currentFrame = 0;
 } 
-
-// Check given file path
-const bool Mesh::_checkFilePath(const std::string fileName)
-{
-	m_model = lib3ds_file_open(fileName.c_str());
-	// Verify the model
-	if(!m_model)                                                                 	
-	{
-		std::cout << "Error : unable to load the given file" << fileName << std::endl;
-		exit(2);
-	}
-	return true;
-}
 
