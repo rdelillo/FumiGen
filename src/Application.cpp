@@ -334,8 +334,6 @@ void Application::animate()
 	{
 		// Animate the camera if needed
 		m_camera->move();
-		// To print the deplacement matrix
-		tool_debug::printMatrix(m_camera->view());
 		// Animate the figures
 		for(unsigned int i=0; i<m_figures.size(); ++i)
 			m_figures[i]->move();

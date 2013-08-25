@@ -16,7 +16,7 @@ m_currentFrame(0)
 	_checkFilePath(fileName);
 	// File is OK, load the model and construct the mesh
 	_loadDataFromFile();
-	_adaptMesh();                                                     
+	//_adaptMesh();                                                     
 	_generateBoidsFromMesh();
 	// Add to the container per frame
 	// There is only 1 entry since the model does not move
@@ -38,7 +38,7 @@ m_currentFrame(0)
 		_checkFilePath(files[i]);
 		// File is OK, load the model and construct the mesh
 		_loadDataFromFile();
-		_adaptMesh();                                                     
+		//_adaptMesh();                                                     
 		// Add to the container per frame
 		// There is only 1 entry since the model does not move
 		m_meshes.push_back(m_mesh);
@@ -63,10 +63,9 @@ void Mesh::_loadDataFromFile()
 	{
 		// Double check file content is OK
 		if(m_model->meshes[iMesh]->nfaces <= 1)                              
-		{
-			std::cout << "Warning empty mesh in file" << std::endl;
+			// There is an empty mesh in the file
 			continue;
-		}
+
 		m_refMesh = m_model->meshes[iMesh];
 		m_nbFaces = m_refMesh->nfaces;
 		// Get bouding box    
@@ -81,11 +80,11 @@ void Mesh::_loadDataFromFile()
 		    {
 			std::vector<float> point;
 			for(unsigned int idx=0; idx<3; ++idx)
-				point.push_back(m_refMesh->vertices[face->index[i]][idx]);
+				point.push_back(m_refMesh->vertices[face->index[i]][idx] / 100.0f);
 
 			//@WARNING Lib3ds max introduce a switch from Y and 
 			point[1] = point[2];
-			point[2] = m_refMesh->vertices[face->index[i]][1];
+			point[2] = m_refMesh->vertices[face->index[i]][1]/100.0f;
 
 			// Use a set dramatically reduced the number of points
 			// Else the same point is stored for each face

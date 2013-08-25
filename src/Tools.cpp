@@ -3,6 +3,7 @@
 #include "Application.hpp"
 #include "Camera.hpp"
 
+#include <lib3ds.h>
 #include <iostream>
 #include <iomanip>
 #include <string.h>
@@ -10,10 +11,6 @@
 #include <sstream>
 #include <math.h>
 #include <set>
-
-// Linking issues with Boost
-// #include <boost/filesystem.hpp>
-// #include <boost/algorithm/string/predicate.hpp>
 
 namespace tool_geometry 
 {
@@ -218,6 +215,14 @@ namespace tool_camera
 		// Top
 		glBegin(GL_QUADS);
 		glColor4ub(0, 255, 0, 100); 
+		glVertex3d(-3.0f, 0.0f, 10.0f);
+		glVertex3d(-3.0f, 3.0f, 10.0f);
+		glVertex3d(3.0f, 3.0f, 10.0f);
+		glVertex3d(3.0f, 0.0f, 10.0f);
+		glEnd();
+		// Bottom
+		glBegin(GL_QUADS);
+		glColor4ub(255, 255, 0, 100); 
 		glVertex3d(-3.0f, 0.0f, -10.0f);
 		glVertex3d(-3.0f, 3.0f, -10.0f);
 		glVertex3d(3.0f, 3.0f, -10.0f);
@@ -234,15 +239,15 @@ namespace tool_camera
 		// Center
 		glBegin(GL_QUADS);
 		glColor4ub(255, 255, 255, 100); 
-		glVertex3d(-0.5f, 0.5f, -0.5f);
-		glVertex3d(0.5f, 0.5f, -0.5f);
-		glVertex3d(0.5f, 0.5f, 0.5f);
-		glVertex3d(-0.5f, 0.5f, 0.5f);
+		glVertex3d(-0.5f, 1.0f, -0.5f);
+		glVertex3d(0.5f, 1.0f, -0.5f);
+		glVertex3d(0.5f, 1.0f, 0.5f);
+		glVertex3d(-0.5f, 1.0f, 0.5f);
 		glEnd();
 	}
 
 	// Update the camera values according to keyboard, mouse
-	void manageFps(const Application& app, Camera& camera)
+	void manageFps(const Application& app, Camera * camera)
 	{
 		// Work variables
 		const float SPEED_MOVE = 0.25f;
@@ -287,10 +292,10 @@ namespace tool_camera
 
 		for(unsigned int i=0; i<3; ++i)
 		{
-			cameraNewPos[i] = camera.position(i);
-			cameraNewPos[i] += camera.xAxis(i)*moveOnX;
-			cameraNewPos[i] += camera.yAxis(i)*moveOnY;
-			cameraNewPos[i] += camera.zAxis(i)*moveOnZ;
+			cameraNewPos[i] = camera->position(i);
+			cameraNewPos[i] += camera->xAxis(i)*moveOnX;
+			cameraNewPos[i] += camera->yAxis(i)*moveOnY;
+			cameraNewPos[i] += camera->zAxis(i)*moveOnZ;
 		}
 
 		// Translate by inverse of new camera position
@@ -316,63 +321,124 @@ namespace tool_camera
 		tool_geometry::setToRotate(rotateAroundY, angleLong, yAxis);
 		tool_geometry::setToTranslate(translate, inverseCameraPos);
 		// Compute new view matrix
-		tool_geometry::setToIdentity(camera.view());
-		tool_geometry::multMatrixBtoMatrixA(camera.view(), rotateAroundX);
-		tool_geometry::multMatrixBtoMatrixA(camera.view(), rotateAroundY);
-		tool_geometry::multMatrixBtoMatrixA(camera.view(), translate);
+		tool_geometry::setToIdentity(camera->view());
+		tool_geometry::multMatrixBtoMatrixA(camera->view(), rotateAroundX);
+		tool_geometry::multMatrixBtoMatrixA(camera->view(), rotateAroundY);
+		tool_geometry::multMatrixBtoMatrixA(camera->view(), translate);
 
 		// Update camera values
 		for (unsigned int i=0 ; i<3 ; ++i)
 		{
 			// Updates the axis with values in view
-			camera.setXAxis(i, camera.view()[i*4+0]);
-			camera.setYAxis(i, camera.view()[i*4+1]);
-			camera.setZAxis(i, camera.view()[i*4+2]);
+			camera->setXAxis(i, camera->view()[i*4+0]);
+			camera->setYAxis(i, camera->view()[i*4+1]);
+			camera->setZAxis(i, camera->view()[i*4+2]);
 			// Updates the position of the camera c
-			camera.setPosition(i, cameraNewPos[i]);
+			camera->setPosition(i, cameraNewPos[i]);
 		}
+	}
+
+	// Helper : Fixed version of lib3ds_matrix_camera
+	// Y and Z axis were wrong in lib3ds (confusion cause switched)
+	// http://lib3ds.sourceforge.net/lib3ds-1.2.0/doc/html/matrix_8c-source.html#l00403
+	// http://www.songho.ca/opengl/gl_transform.html#modelview
+	std::vector<float> lib3ds_matrix_camera_fixed(float* pos, float* tgt, float roll)
+	{
+		// Initialize needed matrices
+		std::vector<float> M;	// Target matrix
+		std::vector<float> R;	// Roll matrix
+		for(unsigned int i=0; i<16; ++i)
+		{
+			M.push_back(0.0f);
+			R.push_back(0.0f);
+		}
+
+		// Initialize needed camera vectors
+		std::vector<float> x;	// camera left vector
+		std::vector<float> y;	// camera up
+		std::vector<float> z;	// camera forward
+		for(unsigned int i=0; i<3; ++i)
+		{
+			x.push_back(0.0f);
+			y.push_back(0.0f);
+			z.push_back(0.0f);
+		}
+		y[1] = 1.0f;	// we can assume up here to be standard
+	
+		// Compute camera forward 
+		for(unsigned int i=0; i<3; ++i)
+			z[i] = pos[i] - tgt[i];
+		tool_geometry::normalize(z);
+		// Compute camera up and left
+		x = tool_geometry::vectorProduct(z, y);
+		y = tool_geometry::vectorProduct(x, z);
+		tool_geometry::normalize(x);
+		tool_geometry::normalize(y);
+
+		// Target matrix
+		tool_geometry::setToIdentity(M);
+		M[0] = x[0];
+		M[1] = x[1];
+		M[2] = x[2];
+		M[4] = y[0];
+		M[5] = y[1];
+		M[6] = y[2];
+		M[8] = z[0];
+		M[9] = z[1];
+		M[10] = z[2];
+
+		// Create the Roll matrix
+		tool_geometry::setToIdentity(R);
+		tool_geometry::setToRotate(R, -roll, z);
+		// Merge Target with Roll
+		tool_geometry::multMatrixBtoMatrixA(R, M);
+		// Apply the camera Translate operation
+		for(unsigned int i=0; i<3; ++i)
+			R[12+i] = R[i]*(-pos[0]) + R[4+i]*(-pos[1]) + R[8+i]*(-pos[2]);
+		return R;
+	}
+
+	// Import camera modelview from 3ds file
+	std::vector<float> getModelviewFrom3dsFile(const std::string &_file)
+	{
+		// Load camera from 3ds file
+		Lib3dsCamera * camera;
+		Lib3dsFile * file =  lib3ds_file_open(_file.c_str());
+		// Verify the file
+		if(!file)                                                                 	
+		{
+			std::cout << "Error : unable to load the given file" 
+							<< _file << std::endl;
+			exit(2);
+		}
+		// Check it contains only 1 camera
+		if(file->ncameras != 1)
+		{
+			std::cout << "Error : 3ds file " << _file << 
+				" contains " << file->ncameras << " camera(s)" << std::endl;
+			exit(2);
+		}
+
+		camera = file->cameras[0];
+
+		// Lib3ds invert Y and Z axis for some reasons
+		// Need to fix the value providen
+		float position_fixed[3];
+		position_fixed[0] = camera->position[0] /100.0f;
+		position_fixed[2] = camera->position[1] /100.0f;
+		position_fixed[1] = camera->position[2] /100.0f;
+		float target_fixed[3];
+		target_fixed[0] = camera->target[0] /100.0f;
+		target_fixed[2] = camera->target[1] /100.0f;
+		target_fixed[1] = camera->target[2] /100.0f;
+
+		return lib3ds_matrix_camera_fixed(position_fixed, target_fixed, camera->roll);
 	}
 // namespace
 }
 
 namespace tool_filesystem
 {
-	/*
-	// Open 3ds file sequence
-	std::vector<std::string> open3dsFiles(const std::string& path)
-	{
-		std::vector<std::string> match_files;
-		// Check if given file is a file
-		boost::filesystem::path _p(path.c_str());
-		// Providen path does not exist
-		if(!boost::filesystem::exists(_p))
-			std::cout << "Invalid given path to construct mesh " << path << std::endl;
-		// Providen path is a single file
-		else if(boost::filesystem::is_regular_file(_p))
-			match_files.push_back(path);
-		// Providen path is a directory
-		// Try to find all of the 3ds files inside it
-		else if(boost::filesystem::is_directory(_p))
-		{
-			// Sort the files found base on name
-        		std::vector<boost::filesystem::path> sorted_paths;
-        		copy(boost::filesystem::directory_iterator(_p),
-			     boost::filesystem::directory_iterator(),
-			     std::back_inserter(sorted_paths));
-        		std::sort(sorted_paths.begin(), sorted_paths.end()); 
-			// From stackoverflow 
-			for(unsigned int i=0; i<sorted_paths.size(); ++i)
-			{
-				std::string filename= sorted_paths[i].generic_string();
-				// Check found file is OK finishing with the 3ds extension
-				if(boost::algorithm::ends_with(filename,".3ds"))
-					match_files.push_back(filename);
-			}
-		}
-		return match_files;
-	}
-	*/
-
 	// Brute open 3ds file sequence since the boost
 	// file system library does not appear to work
 	// on my station (linking issues)

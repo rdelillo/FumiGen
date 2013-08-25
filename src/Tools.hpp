@@ -43,14 +43,13 @@ namespace tool_camera
 	// Draw a simple color scene to test display
 	void drawTestScene();
 	// Update the camera values according to keyboard, mouse
-	void manageFps(const Application& app, Camera& camera);
+	void manageFps(const Application& app, Camera * camera);
+	// Import camera modelview from 3ds file
+	std::vector<float> getModelviewFrom3dsFile(const std::string &_file);
 }
 
 namespace tool_filesystem
 {
-	// Open 3ds file sequence
-	//void open3dsFiles();
-	
 	// Brute open 3ds file sequence since the boost
 	// file system library does not appear to work
 	// on my station (linking issues)
