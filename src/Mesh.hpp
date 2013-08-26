@@ -29,7 +29,7 @@ private :
 	std::vector< std::vector<float> > m_roughMesh;  	// rough mesh
 
 	// Animation attributes
-	int m_currentFrame;						// current frame (default 0)	
+	unsigned int m_currentFrame;					// current frame (default 0)	
 	std::vector< std::set< std::vector<float> > > m_meshes;		// mesh per frame
 	std::vector< std::vector< std::vector<float> > > m_roughMeshes; // roughMesh per frame
 	

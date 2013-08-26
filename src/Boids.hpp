@@ -1,6 +1,7 @@
 #ifndef __BOIDS_HPP__
 #define __BOIDS_HPP__
 
+#include <lib3ds.h>
 #include <ctime>
 #include <cstdlib>
 #include <iostream>
@@ -22,23 +23,29 @@ class Boids : public Figure
 {
 	private :
 
-	// constant for gloabl box (cube)
+	// Constant for gloabl box (cube)
 	std::vector<float> c_origin;			// origin
 	float c_sizeBox ;				// width = height = deep
 
-	// constants for individual boxes
+	// Constants for individual boxes
 	static const float c_widthOneBoid = 1.0f;	// width	
 	static const float c_heigthOneBoid = 0.2f;	// height
 	static const float c_deepOneBoid = 1.0f;	// deep
+
+	// Animation parameters
+	unsigned int m_currentFrame;				// current frame (default 0)
+	std::vector< std::vector<float> > m_leaderPositions; 	// position of the leader boid on time
 
 	public :
 
 	// Builder
 	// Construct a boids system from nowhere
 	Boids(const int nbUnits, const float sizeBox=5.0f);
-	Boids(const int nbUnits, const float sizeBox, const std::vector<float> origin);
+	Boids(const int nbUnits, const std::vector<float> origin, const float sizeBox=5.0f);
+	// Construct a boids system with an animated leader
+	Boids(const int nbUnits, const std::string filepath, const int start, const int end, const float sizeBox=5.0f);
 	// Construct a boids system from Mesh or something else
-	Boids(Figure* b);
+	Boids(Figure* b, const std::string filepath="", const int start=0, const int end=0);
 
 	// Move the group (animation)
 	void move_boids(float valC = 40.0, float valA = 10,
@@ -47,6 +54,10 @@ class Boids : public Figure
 	void move();
 	
 	private:
+	// Init boid system
+	void _init(const int nbUnits, const int sizeBox);
+	// Read the position information for the leader and build animated parameters
+	void _readLeaderInformation(const std::string filepath, const int start, const int end);
 	// Compute the initial position for a specific boid
 	void computeInitialPosition(const int idBoid);
 	// Is one boid into vital space of another one

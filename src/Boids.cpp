@@ -1,45 +1,72 @@
 #include "Boids.hpp"
+#include "Tools.hpp"
 
 // Builder
 // nbUnits : how many units inside the group
-Boids::Boids(const int nbUnits, const float sizeBox)
+Boids::Boids(const int nbUnits, const float sizeBox):
+m_currentFrame(0)
 {
 	m_type = "BOIDS_SYSTEM"; 
 	// Construct a default origin to 0,0,0
-	std::vector<float> origin ;
 	for( unsigned int i=0; i<3; ++i )
-		origin.push_back(0.0f);
+		c_origin.push_back(0.0f);
 
-	// Same as standard builder
-	// Fill up global box constants
-	c_sizeBox = sizeBox ;
-	for( unsigned int i=0; i<3; ++i )
-		c_origin.push_back(origin[i]);
-
-	// Creation of the group
-	// use an int to avoid warnings on build
-	for(int i=0; i<nbUnits ; ++i)
-	{
-		// Create the new boid
-		const int boidId = m_group.size();
-		Boid b(boidId);
-		m_group.push_back(b);
-		computeInitialPosition(boidId);
-	}
-	//@TODO: remove
-	m_group[0].setLeaderShip(1000); 
-	m_group[0].setPosition(0,0.0f);
-	m_group[0].setPosition(1,0.0f);
-	m_group[0].setPosition(2,-0.5f);
+	_init(nbUnits, sizeBox);
 }
 
-Boids::Boids(const int nbUnits, const float sizeBox, const std::vector<float> origin)
+Boids::Boids(const int nbUnits, const std::vector<float> origin, const float sizeBox):
+m_currentFrame(0)
 {
 	m_type = "BOIDS_SYSTEM";
-	// Fill up global box constants
-	c_sizeBox = sizeBox ;
+	// Set boid system origin
 	for(unsigned int i=0; i<3; ++i)
 		c_origin.push_back(origin[i]);
+
+	_init(nbUnits, sizeBox);
+}
+
+// Construct a boids system with an animated leader
+Boids::Boids(const int nbUnits, const std::string filepath, const int start, const int end, const float sizeBox):
+m_currentFrame(0)
+{
+	m_type = "BOIDS_SYSTEM";
+	_readLeaderInformation(filepath, start, end);
+	// Init boids
+	_init(nbUnits, sizeBox);
+}
+
+// Construct a boids system from Mesh or something else - with animated leader
+//@WARNING: Destroy the previous figure
+Boids::Boids(Figure* b, const std::string filepath, const int start, const int end)
+{
+	// Check if given Figure is already a Boids system
+	if(b->type() == "BOIDS_SYSTEM")
+		std::cout << "WARNNING given figure i already a Boids system" << std::endl;
+
+	m_type = "BOIDS_SYSTEM_FROM_" + b->type();
+
+	// Generate the animated parameters if providen
+	if(filepath != "" && end != 0)
+		_readLeaderInformation(filepath, start, end);
+
+	//@WARNING use an int to prevent from warning
+	for(int i=0; i<b->size(); ++i)
+	{
+		Boid newBoid(i);
+		for(unsigned int idx=0; idx<3; ++idx)
+			newBoid.setPosition(idx, b->getBoid(i).position(idx));
+		newBoid.setIntensity(b->getBoid(i).intensity());
+		m_group.push_back(newBoid);
+	}
+	free(b);
+}
+
+// Init boid system
+void Boids::_init(const int nbUnits, const int sizeBox)
+{
+	m_group.clear();
+	// Fill up global box constants
+	c_sizeBox = sizeBox ;
 
 	// Creation of the group
 	//@WARNING use an int to avoid warnings on build
@@ -51,48 +78,94 @@ Boids::Boids(const int nbUnits, const float sizeBox, const std::vector<float> or
 		m_group.push_back(b);
 		computeInitialPosition(boidId);
 	}
+	
+	if(m_group.size() > 0)
+		// Set leader 
+		m_group[0].setLeaderShip(1000); 
+	else
+		std::cout << "Empty boids system" << std::endl;
 }
 
-// Construct a boids system from Mesh or something else
-//@WARNING: Destroy the previous figure
-Boids::Boids(Figure* b)
+// Read the position information for the leader and build animated parameters
+void Boids::_readLeaderInformation(const std::string filepath, const int start, const int end)
 {
-	// Check if given Figure is already a Boids system
-	if(b->type() == "BOIDS_SYSTEM")
-		std::cout << "WARNNING given figure i already a Boids system" << std::endl;
-
-	m_type = "BOIDS_SYSTEM_FROM_" + b->type();
-	//@WARNING use an int to prevent from warning
-	for(int i=0; i<b->size(); ++i)
+	// Read providen file sequence
+	std::vector<std::string> files = tool_filesystem::brute_open3dsFiles(filepath, start, end);
+	for(unsigned int file_index=0; file_index<files.size(); ++file_index)
 	{
-		Boid newBoid(i);
-		for(unsigned int idx=0; idx<3; ++idx)
-			newBoid.setPosition(idx, b->getBoid(i).position(idx));
-		newBoid.setIntensity(b->getBoid(i).intensity());
-		m_group.push_back(newBoid);
-	}
-	free(b);
+		// Check current file
+		// There can be more than 1 mesh in the providen 3ds file sequence
+		Lib3dsFile * l_file =  tool_filesystem::open3dsFile(files[file_index]);
+		
+		int mesh_index = 0;
+		bool mesh_found = false;
+		while(mesh_index != l_file->nmeshes && !mesh_found)
+		{
+			Lib3dsMesh * l_mesh = l_file->meshes[mesh_index];
+			// Mesh is not empty
+			if(l_mesh->nfaces >= 1)                          
+			{
+				// Get center of mesh box 
+				float x,y,z;
+				x = y = z = 0.0f;
+				unsigned int nbPoints = 0;
+				for(unsigned int iFace=0; iFace<l_mesh->nfaces; ++iFace)
+				{
+				    	Lib3dsFace* face = &l_mesh->faces[iFace];
+					for(unsigned int iPoint=0; iPoint<3; ++iPoint)
+					{
+						x+= l_mesh->vertices[face->index[iPoint]][0];
+						y+= l_mesh->vertices[face->index[iPoint]][1];
+						z+= l_mesh->vertices[face->index[iPoint]][2];
+						++nbPoints;
+					}
+				}
+				
+				// Compute center of mesh
+				std::vector<float> centerMesh;
+				centerMesh.push_back((x/(float)nbPoints)/100.0f);
+				centerMesh.push_back((y/(float)nbPoints)/100.0f);	
+				centerMesh.push_back((z/(float)nbPoints)/100.0f);    
 
-	//@TODO: remove
-	m_group[0].setLeaderShip(1000); 
-	m_group[0].setPosition(0,0.0f);
-	m_group[0].setPosition(1,0.0f);
-	m_group[0].setPosition(2,-0.5f);
+				// Add to animation leader position
+				m_leaderPositions.push_back(centerMesh);
+				mesh_found = true;
+			}
+			else
+				++mesh_index;
+		}
+	}	
+	// Origin is the leader position at first frame
+	for(unsigned int i=0; i<3; ++i)
+		c_origin.push_back(m_leaderPositions[0][i]);
 }
 
 // Abstract move function overwritten
 void Boids::move()
 {
-	move_boids();
+	if(m_currentFrame < m_leaderPositions.size())
+	{
+		// Move the leader
+		for(unsigned int i=0; i<3; ++i)
+			m_group[0].setPosition(i, m_leaderPositions[m_currentFrame][i]);
+		// Move the other boids
+		move_boids();
+		++m_currentFrame;
+	}
+	else
+	{
+		m_currentFrame = 0;
+		// Recreate boids from nowhere
+		_init(m_group.size(), c_sizeBox);
+	}
+
 }
 
-// Animate all of the boids of the system
+// Boids Move
+// Animate all of the boids of the system (except leader)
 void Boids::move_boids(float valC, float valA,
 		 float valS, float valR)
-{
-	//@TODO: Modify Animate leader
-	//@TODO: change current position of Boids0
-		
+{		
 	//@WARNING
 	// We only update the boid which are not leader
 	// so explicitely forget the first one
