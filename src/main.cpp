@@ -1,16 +1,13 @@
 #include "Variables.h"
 #include "Application.hpp"
-#include "Figure.hpp"
-#include "Mesh.hpp"
-#include "Boids.hpp"
-#include "Camera.hpp"
+#include "XmlParser.hpp"
 
 
 //Create an Application
-Application* createApplication(Camera * camera)
+Application* createApplication(const std::string xmlFile)
 {
 	Application* application = new Application(); 
-	application->defineCamera(camera);
+	XmlParser(xmlFile, application);
 	application->initApplication();
 	return application;
 }
@@ -19,14 +16,14 @@ Application* createApplication(Camera * camera)
 int main(int argc, char **argv)
 {
 	// Application creation
-	Camera * camera = new Camera("/home/robin/Bureau/FumiGen/src/3ds/test_camera2/scene", 0, 72);
-	//Camera * camera = new Camera();
-	Application* application = createApplication(camera);
-
-	// Creation of the figure to store
-	//application->addFigure(new Boids(30));
-	application->addFigure(new Boids(20, "/home/robin/Bureau/FumiGen/src/3ds/test_boids/scene", 0, 72));
-	//application->addFigure(new Mesh("/home/robin/Bureau/FumiGen/src/3ds/test_boids/scene.0000.3ds"));		
+	if(argc < 2)
+	{
+		std::cout << "Error: no XML scene file providen" << std::endl;
+		exit(2);
+	}
+	std::string xmlFile = argv[1];
+	Application* application = createApplication(xmlFile);
+		
 	// Render Loop
 	application->eventLoop();
 

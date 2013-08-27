@@ -17,6 +17,7 @@ protected :
 	std::vector<Boid> m_group;			// Contains all of the boids of the group
 							// To move a Process to another we copy paste the group
 	std::string m_type; 				// Type of the figure 
+	std::string m_name;				// Name of the figure
 
 public :
 	// Usual
@@ -24,6 +25,8 @@ public :
 	inline const int size() const { return m_group.size(); }
 	inline const bool isNeeded() const { return m_group.size() > 0 ; }
 	inline const std::string type() const { return m_type; }
+	inline void setName(const std::string name){ m_name = name; }
+	inline const std::string name() const { return m_name; }
 
 	// Builder
 	Figure();

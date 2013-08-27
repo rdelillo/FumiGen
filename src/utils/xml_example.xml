@@ -1,0 +1,45 @@
+<!-- FumiGen, 2013 -->
+<!-- Scene Name : XXXX -->
+<!-- Scene Desc : XXXX -->
+<scene>
+	<!-- Main camera of the scene -->
+<!--	<camera filepath=""		filepath for animated camera
+		start=""		first frame of the 3ds sequence
+		end="" />		last frame of the 3ds sequence
+-->
+	<camera filepath=""
+		start=""
+		end="" />
+	<!-- Meshes -->
+	<meshes>
+<!--	<mesh 	name="Mesh_1"   name of the mesh Figure
+		filepath=""	filepath for animated mesh 
+		start=""	first frame of the 3ds sequence
+		end=""		last frame of the 3ds sequence
+		boidsSystem=""	frame - turn into boids system
+		explosion="" /> frame - turn into an explosion
+-->
+		<mesh 	name="Mesh_1"
+			filepath=""
+			start=""
+			end=""
+			boidsSystem=""
+			explosion="" />
+	</meshes>
+	<!-- Boid systems -->
+	<boidsSystems>
+<!--	<boidsSystem 	name="BoidsSystem_1"	name of the boid system
+			nbUnities=""		number of unities in the boid system
+			filepath=""		filepath for the leader target
+			start=""		first frame of the 3ds sequence
+			end=""			last frame of the 3ds sequence
+			explosion="" />		frame - turn into an explosion
+-->
+		<boidsSystem 	name="BoidsSystem_1"
+				nbUnities=""
+				filepath=""
+				start=""
+				end=""
+				explosion="" />
+	</boidsSystems>
+</scene>

@@ -32,12 +32,20 @@ LIBS= $(SDL_LIB) $(OPENGL_LIB) $(RENDERMAN_LIB) $(BOOST_LIB)
 
 OBJS = main.o Application.o Figure.o
 OBJS += Boid.o Boids.o Explosion.o Mesh.o
-OBJS += Camera.o Tools.o
+OBJS += Camera.o Tools.o XmlParser.o 
+
+# Extra library
+OBJS += pugixml.o
 
 all : $(EXE) 
 
 $(EXE) : $(OBJS)
 	$(CXX) $(COMPILER_FLAGS_WARN) $^ $(LIBS) -o $@
+
+# Build pugixml
+# http://pugixml.googlecode.com/svn/tags/latest/docs/quickstart.html#quickstart.main.install
+pugixml.o : utils/pugixml/pugixml.cpp
+	$(CXX) -c $(COMPILER_FLAGS_WARN) $(INCLUDE) $<
 
 %.o: %.cpp
 	$(CXX) -c $(COMPILER_FLAGS_WARN) $(INCLUDE) $<
