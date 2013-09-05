@@ -4,11 +4,29 @@
 #define __APPLICATION_HPP__
 
 #include <vector>
+#include <string>
 
 #include "Variables.h"
 #include "Figure.hpp"
 #include "Camera.hpp"
 
+// This structure allow to store all of the scripted animation
+// and make sure we are able to restart the scene from start at 
+// any time.
+typedef struct
+{
+	unsigned int indexFigure;	// Index of the figure inside the figure list
+	std::string meshFilesPath;	// Path to the 3ds sequence of Mesh
+	std::string boidFilesPath;	// Path to the 3ds sequence of Boid leader
+	unsigned int m_startSequence;	// First frame of the sequence mesh
+	unsigned int m_endSequence;	// Last frame of the sequence mesh
+	unsigned int b_nbUnities;	// Nb of boids unities in the boids system
+	unsigned int b_startSequence;	// First frame of the sequence boids system
+	unsigned int b_endSequence;	// Last frame of the sequence boids system
+	unsigned int frameBoids;	// Frame to turn into boids system
+	unsigned int frameExplosion;	// Frame to explose the Figure
+}
+AnimatedData;
 
 class Application
 {
@@ -43,10 +61,12 @@ private :
 
 	// Figure parameters
 	std::vector<Figure*> m_figures;				// Contains all of the figures defined
+	std::vector<AnimatedData> m_animatedData;		// Contains all of the animated data
 
 	//Others
 	Camera * m_camera;					// the FPS camera
-	unsigned int _cntMove; 					// Move counter
+	unsigned int _cntMove; 					// Move counter (total frame number)
+	unsigned int _playMove;					// Play move counter (frame of the played sequence)
 	bool _done; 						// set to true when the window is closed or to end the application
 
 public :
@@ -102,10 +122,18 @@ public :
 	void addFigure(Figure* f);
 	// Set the camera of the Application
 	void defineCamera(Camera* camera);
+	// Add an animation data for the Application
+	void addAnimatedData(AnimatedData & a);
 
 private :
 	// Remove un-needed figures
 	void _removeEmptyFigures();
+
+	// Animation/Play functions
+	// Reset scene : rebuild the transformed Figures
+	void _reset();
+	// Check transformation of the stored Figures
+	void _transform();
 };
 
 // Create an user event for the render loop (the id is "MY_RENDER_LOOP")

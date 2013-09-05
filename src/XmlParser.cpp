@@ -74,9 +74,26 @@ void XmlParser::_addMeshes()
 		meshInfo.start = it->attribute("start").as_int();
 		meshInfo.end = it->attribute("end").as_int();
 
-		//@TODO: implements
-		//int turnInto_boidsSystem = mesh.attribute("boidsSystem").as_int();
-		//int turnInto_explosion = mesh.attribute("explosion").as_int();
+		AnimatedData animated_boid;
+		bool animatedMesh = false;
+		int turnInto_boidsSystem = it->attribute("boidsSystem").as_int();
+		int turnInto_explosion = it->attribute("explosion").as_int();
+		if(turnInto_boidsSystem != 0 || turnInto_explosion != 0)
+		{
+			//@TODO fillup index here
+			animated_boid.indexFigure = 1;
+			animated_boid.meshFilesPath = meshInfo.filepath;
+			animated_boid.m_startSequence = meshInfo.start;
+			animated_boid.m_endSequence = meshInfo.end;
+			animatedMesh = true;
+		}
+		if(turnInto_boidsSystem != 0)
+			animated_boid.frameBoids = turnInto_boidsSystem;
+		if(turnInto_explosion != 0)
+			animated_boid.frameExplosion = turnInto_explosion;
+		if(animatedMesh)
+			m_application->addAnimatedData(animated_boid);
+
 		meshVector.push_back(meshInfo);
 	}
 	// For each mesh info, add it to the application
@@ -111,8 +128,19 @@ void XmlParser::_addBoidsSystems()
 		boidInfo.start = it->attribute("start").as_int();	
 		boidInfo.end = it->attribute("end").as_int();
 
-		//@TODO: implements
-		//int turnInto_explosion = boidsSystem.attribute("explosion").as_int();
+		int turnInto_explosion = it->attribute("explosion").as_int();
+		if(turnInto_explosion != 0)
+		{
+			AnimatedData animated_boid;
+			//@TODO fillup index here
+			animated_boid.indexFigure = 1;
+			animated_boid.boidFilesPath = boidInfo.filepath;
+			animated_boid.b_nbUnities = boidInfo.nbUnities;
+			animated_boid.b_startSequence = boidInfo.start;
+			animated_boid.b_endSequence = boidInfo.end;
+			animated_boid.frameExplosion = turnInto_explosion;
+			m_application->addAnimatedData(animated_boid);
+		}
 		boidsVector.push_back(boidInfo);
 	}
 	// For each boids system info, add it into the application

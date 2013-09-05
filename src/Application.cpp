@@ -1,9 +1,8 @@
 #include "Application.hpp"
 #include "Tools.hpp"
-
-//@TODO: Ameliorate the scripting
 #include "Explosion.hpp"
 #include "Boids.hpp"
+#include "Mesh.hpp"
 
 Application::Application():
 _windowWidth(800),	
@@ -43,7 +42,8 @@ void Application::initApplication()
 	_renderTimer = SDL_AddTimer(80, refreshLoopTimer, this);
 
 	//Move counter
-	_cntMove=0;
+	_cntMove = 0;
+	_playMove = 0;
 	// Initialize the projection matrix
 	m_camera->setPerspectiveFromAngle();
 
@@ -187,14 +187,19 @@ void Application::handleKeyDownEvents(SDL_keysym* keysym)
 			break;
 
 		// Space : launch play mode
-		//@TODO: update with the flag into application
+		// It is easier to keep the camera mode 
+		// as the global play mode for the Application
 		case SDLK_SPACE :
+			_reset();
 			m_camera->startPlayMode();
 			break;
 
 		// Camera info
 		case SDLK_c :
-			std::cout << "position : " << m_camera->position(0) << "," << m_camera->position(1) << "," <<  m_camera->position(2) << std::endl;
+			std::cout << "position : " \
+			<< m_camera->position(0) << "," \
+			<< m_camera->position(1) << "," \
+			<<  m_camera->position(2) << std::endl;
 			break;
 
 		// FPS management
@@ -292,7 +297,7 @@ void Application::drawFrame()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//<DRAW HERE>
-	std::cout << "\nDRAW - FRAME : " << _cntMove << std::endl;
+	std::cout << "\nDRAW - FRAME : " << _cntMove << "(" << _playMove <<")" << std::endl;
 
 	// Sets the matrix mode
 	//@WARNING : Need a float* for modelview and projection in OpenGL
@@ -332,8 +337,11 @@ void Application::animate()
 	// If in PLAY mode (no FPS)
 	if(m_camera->getMode() == "PLAY")
 	{
+		++_playMove;
 		// Animate the camera if needed
 		m_camera->move();
+		// Transform the figures if needed
+		_transform();
 		// Animate the figures
 		for(unsigned int i=0; i<m_figures.size(); ++i)
 			m_figures[i]->move();
@@ -359,6 +367,12 @@ void Application::addFigure(Figure* f)
 	m_figures.push_back(f);
 }
 
+// Add an animation data for the Application
+void Application::addAnimatedData(AnimatedData & a)
+{
+	m_animatedData.push_back(a);
+}
+
 // Set the camera of the Application
 void Application::defineCamera(Camera* camera)
 {
@@ -377,6 +391,71 @@ void Application::_removeEmptyFigures()
 			free(m_figures[i]);
 			m_figures.erase(m_figures.begin()+i);
 		}
+	}
+}
+
+// Reset scene : rebuild the transformed Figures
+void Application::_reset()
+{
+	_playMove = 0;
+	for(unsigned int i=0; i<m_animatedData.size(); ++i)
+	{
+		AnimatedData animation = m_animatedData[i];
+		// If explosion is not defined then we need to
+		// remove the previous figure from the list
+		if(animation.frameExplosion == 0)
+		{ 
+			free(m_figures[animation.indexFigure]);
+			m_figures.erase(m_figures.begin()+i);
+		}
+		// Create a new Figure from scratch
+		// The figure to re-create is a Mesh
+		if(animation.meshFilesPath != "")
+		{
+			Mesh * new_mesh;
+			new_mesh = new Mesh( \
+				animation.meshFilesPath, \
+				animation.m_startSequence, \
+				animation.m_endSequence \
+			);
+			// Insert the new Figure at same position
+			m_figures.insert( \
+				m_figures.begin()+animation.indexFigure, \
+				new_mesh \
+			);
+		}
+		// The figure to re-create is a Boid system
+		else
+		{
+			Boids * new_boids ;
+			new_boids = new Boids( \
+				animation.b_nbUnities, \
+				animation.boidFilesPath, \
+				animation.b_startSequence, \
+				animation.b_endSequence \
+			);
+			// Insert the new Figure at same position
+			m_figures.insert( \
+				m_figures.begin()+animation.indexFigure, \
+				new_boids \
+			);
+		}
+	}
+}
+
+// Check transformation of the stored Figures
+void Application::_transform()
+{
+	for(unsigned int i=0; i<m_animatedData.size(); ++i)
+	{
+		AnimatedData animation = m_animatedData[i];
+		unsigned int idx = animation.indexFigure;
+		// Turn the current figure into a Boid system
+		if(animation.frameBoids == _playMove)
+			m_figures[idx] = new Boids(m_figures[idx]);
+		// Turn the current figure into an Explosion
+		else if(animation.frameExplosion == _playMove)
+			m_figures[idx] = new Explosion(m_figures[idx]);
 	}
 }
 
@@ -406,5 +485,5 @@ Uint32 refreshLoopTimer(Uint32 interval, void* param)
     event.user.data2 = 0;
     SDL_PushEvent(&event);
     return interval;
-}
+} 
 

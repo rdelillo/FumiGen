@@ -26,8 +26,8 @@ private :
         std::vector<float> m_projection;// projection matrix
 
 	// Animation parameters
-	//@TODO: temporary stored the Play/Pause flag into camera, will
-	// need to be moved into Application
+	// It is easier to keep the camera mode 
+	// as the global play mode for the Application
 	std::string m_cameraMode;			// FPS or PLAY
 	unsigned int m_currentFrame;			// current frame displayed on screen (default 0)
 	std::vector< std::vector<float> > m_views; 	// view matrixes from 3ds files sequence
