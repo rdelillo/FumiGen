@@ -190,7 +190,6 @@ void Application::handleKeyDownEvents(SDL_keysym* keysym)
 		// It is easier to keep the camera mode 
 		// as the global play mode for the Application
 		case SDLK_SPACE :
-			_reset();
 			m_camera->startPlayMode();
 			break;
 
@@ -345,6 +344,11 @@ void Application::animate()
 		// Animate the figures
 		for(unsigned int i=0; i<m_figures.size(); ++i)
 			m_figures[i]->move();
+		// Test if play sequence is finished
+		// Optimization, better to reconstruct
+		// the data, at the end of the play sequence
+		if(m_camera->getMode() == "FPS")
+			_reset();	
 	}
 }
 
@@ -406,7 +410,7 @@ void Application::_reset()
 		if(animation.frameExplosion == 0)
 		{ 
 			free(m_figures[animation.indexFigure]);
-			m_figures.erase(m_figures.begin()+i);
+			m_figures.erase(m_figures.begin()+animation.indexFigure);
 		}
 		// Create a new Figure from scratch
 		// The figure to re-create is a Mesh
@@ -452,7 +456,14 @@ void Application::_transform()
 		unsigned int idx = animation.indexFigure;
 		// Turn the current figure into a Boid system
 		if(animation.frameBoids == _playMove)
-			m_figures[idx] = new Boids(m_figures[idx]);
+		{
+			m_figures[idx] = new Boids( \
+				m_figures[idx], \
+				animation.boidFilesPath, \
+				animation.b_startSequence, \
+				animation.b_endSequence \
+			);
+		}
 		// Turn the current figure into an Explosion
 		else if(animation.frameExplosion == _playMove)
 			m_figures[idx] = new Explosion(m_figures[idx]);

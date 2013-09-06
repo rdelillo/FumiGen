@@ -120,6 +120,8 @@ public :
 	// FIGURES MANAGEMENT
 	// Add a new figure to the Application
 	void addFigure(Figure* f);
+	// Return the number of Figure stored into the application
+	inline unsigned int nbUnities() const { return m_figures.size(); }
 	// Set the camera of the Application
 	void defineCamera(Camera* camera);
 	// Add an animation data for the Application

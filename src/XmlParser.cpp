@@ -64,6 +64,7 @@ void XmlParser::_parseCamera()
 void XmlParser::_addMeshes()
 {
 	std::vector<Temp_Mesh> meshVector;
+	std::vector<AnimatedData> animatedMeshVector;
 	pugi::xml_node meshes = _getScene().child("meshes");
 	// For each mesh found add it to the application
 	for (pugi::xml_node_iterator it = meshes.begin(); it != meshes.end(); ++it)
@@ -74,26 +75,38 @@ void XmlParser::_addMeshes()
 		meshInfo.start = it->attribute("start").as_int();
 		meshInfo.end = it->attribute("end").as_int();
 
-		AnimatedData animated_boid;
-		bool animatedMesh = false;
-		int turnInto_boidsSystem = it->attribute("boidsSystem").as_int();
-		int turnInto_explosion = it->attribute("explosion").as_int();
+		// Test animated figure
+		AnimatedData animated_mesh;
+		int turnInto_boidsSystem = 0;
+		int turnInto_explosion = 0;
+		std::string boidsSystemPath = "";
+		if(it->attribute("boidsSystemPath"))
+		{
+			boidsSystemPath = it->attribute("boidsSystemPath").value();
+			if(it->attribute("boidsSystem"))
+		 		turnInto_boidsSystem = it->attribute("boidsSystem").as_int();
+		}
+		if(it->attribute("explosion"))
+			turnInto_explosion = it->attribute("explosion").as_int();
+
 		if(turnInto_boidsSystem != 0 || turnInto_explosion != 0)
 		{
-			//@TODO fillup index here
-			animated_boid.indexFigure = 1;
-			animated_boid.meshFilesPath = meshInfo.filepath;
-			animated_boid.m_startSequence = meshInfo.start;
-			animated_boid.m_endSequence = meshInfo.end;
-			animatedMesh = true;
+			animated_mesh.indexFigure = meshVector.size();
+			animated_mesh.meshFilesPath = meshInfo.filepath;
+			animated_mesh.m_startSequence = meshInfo.start;
+			animated_mesh.m_endSequence = meshInfo.end;
+			animated_mesh.frameExplosion = animated_mesh.frameBoids = 0;
+			if(turnInto_boidsSystem != 0)
+			{
+				animated_mesh.frameBoids = turnInto_boidsSystem;
+				animated_mesh.boidFilesPath = boidsSystemPath;
+				animated_mesh.b_startSequence = (unsigned int)it->attribute("boidsStart").as_int();
+				animated_mesh.b_endSequence = (unsigned int)it->attribute("boidsEnd").as_int();
+			}
+			if(turnInto_explosion != 0)
+				animated_mesh.frameExplosion = turnInto_explosion;
+			animatedMeshVector.push_back(animated_mesh);
 		}
-		if(turnInto_boidsSystem != 0)
-			animated_boid.frameBoids = turnInto_boidsSystem;
-		if(turnInto_explosion != 0)
-			animated_boid.frameExplosion = turnInto_explosion;
-		if(animatedMesh)
-			m_application->addAnimatedData(animated_boid);
-
 		meshVector.push_back(meshInfo);
 	}
 	// For each mesh info, add it to the application
@@ -108,6 +121,14 @@ void XmlParser::_addMeshes()
 		else
 			new_mesh = new Mesh(meshInfo.filepath, meshInfo.start, meshInfo.end);
 		new_mesh->setName(meshInfo.name);
+		// Look for a potential animated mesh
+		if(animatedMeshVector.size() > 0 && animatedMeshVector.at(0).indexFigure == i)
+		{
+			AnimatedData animated_mesh = animatedMeshVector[0];
+			animated_mesh.indexFigure = m_application->nbUnities();
+			m_application->addAnimatedData(animated_mesh);
+			animatedMeshVector.erase(animatedMeshVector.begin());
+		}
 		// Add the new mesh into the Application
 		m_application->addFigure(new_mesh);
 	}
@@ -117,6 +138,7 @@ void XmlParser::_addMeshes()
 void XmlParser::_addBoidsSystems()
 {
 	std::vector<Temp_Boids> boidsVector;
+	std::vector<AnimatedData> animatedBoidsVector;
 	pugi::xml_node boidsSystems = _getScene().child("boidsSystems");
 	// For each boids system found store the information
 	for (pugi::xml_node_iterator it = boidsSystems.begin(); it != boidsSystems.end(); ++it)
@@ -128,18 +150,19 @@ void XmlParser::_addBoidsSystems()
 		boidInfo.start = it->attribute("start").as_int();	
 		boidInfo.end = it->attribute("end").as_int();
 
-		int turnInto_explosion = it->attribute("explosion").as_int();
+		int turnInto_explosion = 0;
+		if(it->attribute("explosion"))
+			turnInto_explosion = it->attribute("explosion").as_int();
 		if(turnInto_explosion != 0)
 		{
 			AnimatedData animated_boid;
-			//@TODO fillup index here
-			animated_boid.indexFigure = 1;
+			animated_boid.indexFigure = boidsVector.size();
 			animated_boid.boidFilesPath = boidInfo.filepath;
 			animated_boid.b_nbUnities = boidInfo.nbUnities;
 			animated_boid.b_startSequence = boidInfo.start;
 			animated_boid.b_endSequence = boidInfo.end;
 			animated_boid.frameExplosion = turnInto_explosion;
-			m_application->addAnimatedData(animated_boid);
+			animatedBoidsVector.push_back(animated_boid);
 		}
 		boidsVector.push_back(boidInfo);
 	}
@@ -155,6 +178,14 @@ void XmlParser::_addBoidsSystems()
 		else
 			new_boids = new Boids(boidInfo.nbUnities, boidInfo.filepath, boidInfo.start, boidInfo.end);
 		new_boids->setName(boidInfo.name);
+		// Look for any potential animated boids system
+		if(animatedBoidsVector.size() > 0 && animatedBoidsVector[0].indexFigure == i)
+		{
+			AnimatedData animated_boid = animatedBoidsVector[0];
+			animated_boid.indexFigure = m_application->nbUnities();
+			m_application->addAnimatedData(animated_boid);
+			animatedBoidsVector.erase(animatedBoidsVector.begin());
+		}
 		// Add the new boids system into the Application
 		m_application->addFigure(new_boids);
 	}
