@@ -561,9 +561,12 @@ namespace tool_renderman
 	// Construct a RIB file name 
 	std::string _getRIBFile(const std::string name, const unsigned int frame, const std::string label)
 	{
-		std::string returnValue = "/home/robin/Bureau/test/" + name + "/";
+		std::string returnValue = "/home/robin/Bureau/Render/rib/" + name + "/";
 		if(label != "")
 			returnValue += label + "/";
+		// Create directory if does not exist
+		std::string commandDirectory = "mkdir -p " + returnValue;
+		system(commandDirectory.c_str());
 		// Add frame number pad 4
 		std::ostringstream oss;
 		oss << std::setfill('0') << std::setw(4) << frame;
@@ -574,9 +577,12 @@ namespace tool_renderman
 	// Construct a TiFF file name
 	std::string _getTIFFFile(const std::string name, const unsigned int frame, const std::string label)
 	{
-		std::string returnValue = "/home/robin/Bureau/Images/" + name + "/";
+		std::string returnValue = "/home/robin/Bureau/Render/images/" + name + "/";
 		if(label != "")
 			returnValue += label + "/";
+		// Create directory if does not exist
+		std::string commandDirectory = "mkdir -p " + returnValue;
+		system(commandDirectory.c_str());
 		// Add frame number pad 4
 		std::ostringstream oss;
 		oss << std::setfill('0') << std::setw(4) << frame;
