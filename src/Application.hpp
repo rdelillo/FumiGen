@@ -64,6 +64,7 @@ private :
 	std::vector<AnimatedData> m_animatedData;		// Contains all of the animated data
 
 	//Others
+	bool m_renderFlag;					// set to true when the process is rendering using Renderman
 	Camera * m_camera;					// the FPS camera
 	unsigned int _cntMove; 					// Move counter (total frame number)
 	unsigned int _playMove;					// Play move counter (frame of the played sequence)

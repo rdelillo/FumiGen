@@ -18,7 +18,10 @@ m_currentFrame(0)
 	// Load 3ds file sequence
 	std::vector<std::string> files = tool_filesystem::brute_open3dsFiles(filepath, start, end);
 	for(unsigned int i=0; i<files.size(); ++i)
+	{
 		m_views.push_back(tool_camera::getModelviewFrom3dsFile(files[i]));
+		m_rendermanViews.push_back(tool_camera::getRendermanTransformFrom3dsFile(files[i]));
+	}
 }
 
 // Init camera with default values and first computations
@@ -179,6 +182,7 @@ void Camera::move()
 		// Read the next position from the 
 		// registered camera positions
 		m_view = m_views[m_currentFrame];
+		m_rendermanView = m_rendermanViews[m_currentFrame];
 		++m_currentFrame;
 	}
 	else

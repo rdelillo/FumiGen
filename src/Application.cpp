@@ -13,6 +13,7 @@ m_goingLeft(false),
 m_goingRight(false),
 m_goingForward(false),
 m_goingBackward(false),
+m_renderFlag(false),
 m_camera(NULL)
 {
 	//Fill up move values
@@ -200,6 +201,13 @@ void Application::handleKeyDownEvents(SDL_keysym* keysym)
 			<< m_camera->position(1) << "," \
 			<<  m_camera->position(2) << std::endl;
 			break;
+		
+		// Render : launch the renderman rendermode
+		// Like a play mode but with the render option enabled
+		case SDLK_r :
+			m_renderFlag = true;
+			m_camera->startPlayMode();
+			break;
 
 		// FPS management
 		// classic : Z,Q,S,D
@@ -343,12 +351,24 @@ void Application::animate()
 		_transform();
 		// Animate the figures
 		for(unsigned int i=0; i<m_figures.size(); ++i)
+		{
 			m_figures[i]->move();
+			if(m_renderFlag)
+			{
+				m_figures[i]->setRenderCamera(m_camera->getRendermanTransform());
+				m_figures[i]->render();
+			}
+		}
 		// Test if play sequence is finished
 		// Optimization, better to reconstruct
 		// the data, at the end of the play sequence
 		if(m_camera->getMode() == "FPS")
-			_reset();	
+		{
+			_reset();
+			m_renderFlag = false;
+			for(unsigned int i=0; i<m_figures.size(); ++i)
+				m_figures[i]->reset();	
+		}
 	}
 }
 

@@ -18,6 +18,9 @@ protected :
 							// To move a Process to another we copy paste the group
 	std::string m_type; 				// Type of the figure 
 	std::string m_name;				// Name of the figure
+	//Animated parameters
+	std::vector<float> m_cameraMatrix;		// Store the camera matrix for Renderman
+	unsigned int m_renderFrame;			// Current render frame 
 
 public :
 	// Usual
@@ -32,11 +35,14 @@ public :
 	Figure();
 	// Animate the Figure
 	virtual void move();
-
 	// Draw - function OpenGL
 	void brutalDraw();
-	//@TODO: Render - functions RenderMan
-	//void render();
+	// Render - functions RenderMan
+	void render();
+	// Render - set render camera
+	void setRenderCamera(const std::vector<float>& camera);
+	// Render - reset the animation parameters
+	void reset();
 };
 
 #endif // __FIGURE_HPP__

@@ -16,8 +16,8 @@ else
 	LDLIBSOPTIONS= -L/usr/local/lib   /usr/local/lib/lib3ds.a
 	SDL_INC = -I/usr/include/SDL/
 	SDL_LIB = `sdl-config --libs`
-	#RENDERMAN_INC =  -I$(DELIGHT)/include
-	#RENDERMAN_LIB = -L/$(DELIGHT)/lib -l3delight
+	RENDERMAN_INC =  -I$(DELIGHT)/include
+	RENDERMAN_LIB = -L/$(DELIGHT)/lib -l3delight
 	CXX=g++
 endif
 

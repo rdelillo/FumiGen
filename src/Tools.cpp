@@ -397,7 +397,70 @@ namespace tool_camera
 		return R;
 	}
 
-	// Import camera modelview from 3ds file
+	// Helper : Fixed version of lib3ds_matrix_camera for Renderman
+	// As opposite to OpenGL the renderman camera transform is applied
+	// on all of the object of the scene. We need to apply the opposite transformation
+	std::vector<float> lib3ds_matrix_camera_renderman(float* pos, float* tgt, float roll)
+	{
+		// Initialize needed matrices
+		std::vector<float> M;	// Target matrix
+		std::vector<float> R;	// Roll matrix
+		for(unsigned int i=0; i<16; ++i)
+		{
+			M.push_back(0.0f);
+			R.push_back(0.0f);
+		}
+
+		// Initialize needed camera vectors
+		std::vector<float> x;	// camera left vector
+		std::vector<float> y;	// camera up
+		std::vector<float> z;	// camera forward
+		for(unsigned int i=0; i<3; ++i)
+		{
+			x.push_back(0.0f);
+			y.push_back(0.0f);
+			z.push_back(0.0f);
+		}
+		y[1] = 1.0f;	// we can assume up here to be standard
+	
+		// Compute camera forward 
+		for(unsigned int i=0; i<3; ++i)
+			z[i] = pos[i]-tgt[i];
+		tool_geometry::normalize(z);
+		// Compute camera up and left
+		x = tool_geometry::vectorProduct(z, y);
+		y = tool_geometry::vectorProduct(x, z);
+		tool_geometry::normalize(x);
+		tool_geometry::normalize(y);
+
+		// Target matrix
+		tool_geometry::setToIdentity(M);
+		M[0] = -x[0];
+		M[1] = -x[1];
+		M[2] = -x[2];
+		M[4] = -y[0];
+		M[5] = -y[1];
+		M[6] = -y[2];
+		M[8] = -z[0];
+		M[9] = -z[1];
+		M[10] = -z[2];
+
+		// Operate the Z rotation on revert axis
+		for(unsigned int i=0; i<3; ++i)
+			z[i] *= -1.0f;
+
+		// Create the Roll matrix
+		tool_geometry::setToIdentity(R);
+		tool_geometry::setToRotate(R, -roll, z);
+		// Merge Target with Roll
+		tool_geometry::multMatrixBtoMatrixA(R, M);
+		// Apply the camera Translate operation
+		for(unsigned int i=0; i<3; ++i)
+			R[12+i] = R[i]*(-pos[0]) + R[4+i]*(-pos[1]) + R[8+i]*(-pos[2]);
+		return R;
+	}
+
+	// Import camera modelview from 3ds file (OpenGL)
 	std::vector<float> getModelviewFrom3dsFile(const std::string& file)
 	{
 		// Load camera from 3ds file
@@ -424,6 +487,35 @@ namespace tool_camera
 		target_fixed[1] = camera->target[2] /100.0f;
 
 		return lib3ds_matrix_camera_fixed(position_fixed, target_fixed, camera->roll);
+	}
+
+	// Import camera tranform from 3ds file (Renderman)
+	std::vector<float> getRendermanTransformFrom3dsFile(const std::string& file)
+	{
+		// Load camera from 3ds file
+		Lib3dsCamera * camera;
+		Lib3dsFile * l_file =  tool_filesystem::open3dsFile(file);
+		// Check it contains only 1 camera
+		if(l_file->ncameras != 1)
+		{
+			std::cout << "Error : 3ds file " << l_file << 
+				" contains " << l_file->ncameras << " camera(s)" << std::endl;
+			exit(2);
+		}
+		camera = l_file->cameras[0];
+
+		// Lib3ds invert Y and Z axis for some reasons
+		// Need to fix the value providen
+		float position_fixed[3];
+		position_fixed[0] = camera->position[0] /100.0f;
+		position_fixed[2] = camera->position[1] /100.0f;
+		position_fixed[1] = camera->position[2] /100.0f;
+		float target_fixed[3];
+		target_fixed[0] = camera->target[0] /100.0f;
+		target_fixed[2] = camera->target[1] /100.0f;
+		target_fixed[1] = camera->target[2] /100.0f;
+
+		return lib3ds_matrix_camera_renderman(position_fixed, target_fixed, camera->roll);
 	}
 // namespace
 }
@@ -456,12 +548,111 @@ namespace tool_filesystem
 		if(!l_file)                                                                 	
 		{
 			std::cout << "Error : unable to load the given file" 
-							<< l_file << std::endl;
+							<< file.c_str() << std::endl;
 			exit(2);
 		}
 		return l_file;
 	}
 // namespace
+}
+
+namespace tool_renderman
+{
+	// Construct a RIB file name 
+	std::string _getRIBFile(const std::string name, const unsigned int frame, const std::string label)
+	{
+		std::string returnValue = "/home/robin/Bureau/test/" + name + "/";
+		if(label != "")
+			returnValue += label + "/";
+		// Add frame number pad 4
+		std::ostringstream oss;
+		oss << std::setfill('0') << std::setw(4) << frame;
+		returnValue += "rib." + oss.str() + ".rib";
+		return returnValue;
+	}
+
+	// Construct a TiFF file name
+	std::string _getTIFFFile(const std::string name, const unsigned int frame, const std::string label)
+	{
+		std::string returnValue = "/home/robin/Bureau/Images/" + name + "/";
+		if(label != "")
+			returnValue += label + "/";
+		// Add frame number pad 4
+		std::ostringstream oss;
+		oss << std::setfill('0') << std::setw(4) << frame;
+		returnValue += "img." + oss.str() + ".tiff";
+		return returnValue;
+	}
+
+	// Convert an OpenGL camera to Renderman camera
+	void _convertMatrixToRtMatrix(const std::vector<float>& matrix, RtMatrix converted)
+	{
+		for(unsigned int k=0; k<4; ++k)
+		{
+			for(unsigned int l=0; l<4; ++l)
+				converted[k][l] = 0;
+		}
+		unsigned int i = 0;
+		unsigned int j = 0;
+		for(unsigned int indice = 0; indice<16; ++indice)
+		{
+			if(j == 4)
+			{
+				++i;
+				j=0;
+			}
+			converted[i][j] = matrix.at(indice);
+			++j;
+		}
+	}
+
+	// Generate RIB file header
+	void generateRIBHeader( \
+		const std::string name, \
+		const unsigned int frame, \
+		const std::vector<float> camera, \
+		const std::string label \
+	)
+	{
+		std::string ribFile = _getRIBFile(name, frame, label);
+		std::string tiffFile = _getTIFFFile(name, frame, label);
+		// Create Rib file header
+		RiBegin(ribFile.c_str());
+		RiDisplay(tiffFile.c_str(), RI_FILE, RI_RGB, RI_NULL);
+		RiFormat(RtInt(1280), RtInt(720), 1.0f);
+		RtFloat fov(45.0f);
+		RiProjection("perspective", RI_FOV, &fov, RI_NULL);
+		// Convert Camera from OpenGL to Renderman
+		RtMatrix renderCamera;
+		_convertMatrixToRtMatrix(camera, renderCamera);
+		RiTransform(renderCamera);
+		RiPixelSamples(RtFloat(4.0f), RtFloat(4.0f));
+	}
+
+	// Generate RIB file footer
+	void generateRIBFileFooter()
+	{
+		RiWorldEnd();
+		RiEnd();
+	}
+
+	// Render one boid to renderman
+	void renderOneBoid(const Boid& b)
+	{
+		const float epsilon = 0.05;
+		RiAttributeBegin();
+		const float x = b.position(0);
+		const float y = b.position(1);
+		const float z = b.position(2);
+		RtPoint Square[4] = { \
+			{x+epsilon, y, z}, \
+			{x-epsilon, y, z}, \
+			{x, y+epsilon, z}, \
+			{x, y, z+epsilon}  \
+		};
+		RiPolygon((RtInt) 4,RI_P, (RtPointer) Square, RI_NULL);
+		RiAttributeEnd();
+	}
 }
 
 namespace tool_debug
@@ -470,7 +661,7 @@ namespace tool_debug
 	void printMatrix(const std::vector<float> matrix)
 	{
 		std::cout << "" << std::endl;
-		for(unsigned int i=0; i<4; ++i)
+		for(unsigned int i=0; i<16; i+=4)
 		{
 			std::cout << matrix[i+0]<<" " << matrix[i+1]<<" " << matrix[i+2]<<" " << matrix[i+3]<< std::endl;
 		}

@@ -7,6 +7,7 @@
 #include <lib3ds.h>
 #include <string>
 #include <vector>
+#include <ri.h>
 
 namespace tool_geometry
 {
@@ -45,8 +46,10 @@ namespace tool_camera
 	void drawTestScene();
 	// Update the camera values according to keyboard, mouse
 	void manageFps(const Application& app, Camera * camera);
-	// Import camera modelview from 3ds file
+	// Import camera modelview from 3ds file (OpenGL)
 	std::vector<float> getModelviewFrom3dsFile(const std::string& file);
+	// Import camera tranform from 3ds file (Renderman)
+	std::vector<float> getRendermanTransformFrom3dsFile(const std::string& file);
 }
 
 namespace tool_filesystem
@@ -57,6 +60,27 @@ namespace tool_filesystem
 	std::vector<std::string> brute_open3dsFiles(const std::string& path, const int start_seq, const int end_seq);
 	// Import 3ds file with lib3ds and check it
 	Lib3dsFile * open3dsFile(const std::string& file);
+}
+
+namespace tool_renderman
+{
+	// Construct a RIB file name 
+	std::string _getRIBFile(const std::string name, const unsigned int frame, const std::string label="");
+	// Construct a TiFF file name
+	std::string _getTIFFFile(const std::string name, const unsigned int frame, const std::string label="");
+	// Convert an OpenGL camera to Renderman camera
+	void _convertMatrixToRtMatrix(const std::vector<float>& matrix, RtMatrix converted);
+	// Generate RIB file header
+	void generateRIBHeader( \
+		const std::string name, \
+		const unsigned int frame, \
+		const std::vector<float> camera, \
+		const std::string label="" \
+	);
+	// Generate RIB file footer
+	void generateRIBFileFooter();
+	// Render one boid to renderman
+	void renderOneBoid(const Boid& b);
 }
 
 namespace tool_debug
