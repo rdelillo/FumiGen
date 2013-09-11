@@ -28,9 +28,11 @@ private :
 	// Animation parameters
 	// It is easier to keep the camera mode 
 	// as the global play mode for the Application
-	std::string m_cameraMode;			// FPS or PLAY
-	unsigned int m_currentFrame;			// current frame displayed on screen (default 0)
-	std::vector< std::vector<float> > m_views; 	// view matrixes from 3ds files sequence
+	std::string m_cameraMode;				// FPS or PLAY
+	unsigned int m_currentFrame;				// current frame displayed on screen (default 0)
+	std::vector< std::vector<float> > m_views; 		// view matrixes from 3ds files sequence
+	std::vector<float> m_rendermanView;			// current transform matrix (renderman)
+	std::vector< std::vector<float> > m_rendermanViews; 	// transform matrix from 3ds file sequence (renderman)
 
 public :
 	// Builder
@@ -57,6 +59,8 @@ public :
 	// Get camera matrix as float* for openGL
 	float* getViewf(float* modelView);
 	float* getProjectionf(float* projection);
+	// Get current renderman transform 
+	inline std::vector<float> getRendermanTransform() const { return m_rendermanView; }
 	
 	// Get/set
 	// Camera mode
