@@ -81,6 +81,14 @@ namespace tool_renderman
 	void generateRIBFileFooter();
 	// Render one boid to renderman
 	void renderOneBoid(const Boid& b);
+	// Create the renderman attribute for a skin pass
+	void shadeMeshSkinPass();
+	// Create the renderman attribute for a reflect pass
+	void shadeMeshReflectPass();
+	// Create the renderman attribute for a matte pass
+	void shadeMeshMattePass();
+	// Render one mesh to renderman
+	void renderMesh(const std::vector<float>& mesh);
 }
 
 namespace tool_debug

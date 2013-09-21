@@ -148,10 +148,70 @@ void Mesh::move()
 	{
 		m_roughMesh = m_roughMeshes.at(m_currentFrame);
 		m_mesh = m_meshes.at(m_currentFrame);
-		_generateBoidsFromMesh();
+		//_generateBoidsFromMesh();
+		// We need to use the same boids else
+		// the intensity changes
+		std::set< std::vector<float> >::iterator it;
+		unsigned int i = 0;
+		for (it=m_mesh.begin(); it!=m_mesh.end(); ++it)
+		{
+			m_group[i].setPosition(0, it->at(0));
+			m_group[i].setPosition(1, it->at(1));
+			m_group[i].setPosition(2, it->at(2));
+			++i;
+		}
 		++m_currentFrame;
 	}
 	else
 		m_currentFrame = 0;
 } 
+
+// Render - functions RenderMan
+void Mesh::render()
+{
+	// Convert the rough mesh for Renderman
+	std::vector<float> currentMesh;
+	for(unsigned int i=0; i<m_roughMesh.size() ; ++i)
+	{
+		for(unsigned int idx=0; idx<3; ++idx)
+			currentMesh.push_back(m_roughMesh.at(i).at(idx));
+	}
+
+	// Matte Pass
+	std::string figureNameMatte = m_type + "_" + m_name + "_matte";
+	tool_renderman::generateRIBHeader(figureNameMatte, m_renderFrame, m_cameraMatrix);
+	RiWorldBegin();
+	tool_renderman::shadeMeshMattePass();
+	tool_renderman::renderMesh(currentMesh);
+	tool_renderman::generateRIBFileFooter();
+
+	// Skin Pass
+	std::string figureNameSkin = m_type + "_" + m_name + "_skin";
+	tool_renderman::generateRIBHeader(figureNameSkin, m_renderFrame, m_cameraMatrix);
+	RiWorldBegin();
+	float intensity = 1.0f;
+	RiLightSource("distantlight", "intensity", &intensity, RI_NULL);
+	tool_renderman::shadeMeshSkinPass();
+	tool_renderman::renderMesh(currentMesh);
+	tool_renderman::generateRIBFileFooter();
+
+	// Reflect Pass
+	std::string figureNameReflect = m_type + "_" + m_name + "_refect";
+	tool_renderman::generateRIBHeader(figureNameReflect, m_renderFrame, m_cameraMatrix);
+	RiWorldBegin();
+	tool_renderman::shadeMeshReflectPass();
+	tool_renderman::renderMesh(currentMesh);
+	tool_renderman::generateRIBFileFooter();
+
+	// Boids pass
+	std::string figureNameBoid = m_type + "_" + m_name +"_boids";
+	tool_renderman::generateRIBHeader(figureNameBoid, m_renderFrame, m_cameraMatrix);
+	// Render specific for figures
+	RiWorldBegin();
+	for(unsigned int i=0; i<m_group.size(); ++i)
+		tool_renderman::renderOneBoid(m_group[i]);
+	tool_renderman::generateRIBFileFooter();
+
+	++m_renderFrame;
+}
 

@@ -645,18 +645,89 @@ namespace tool_renderman
 	// Render one boid to renderman
 	void renderOneBoid(const Boid& b)
 	{
-		const float epsilon = 0.05;
-		RiAttributeBegin();
 		const float x = b.position(0);
 		const float y = b.position(1);
 		const float z = b.position(2);
-		RtPoint Square[4] = { \
-			{x+epsilon, y, z}, \
-			{x-epsilon, y, z}, \
-			{x, y+epsilon, z}, \
-			{x, y, z+epsilon}  \
-		};
-		RiPolygon((RtInt) 4,RI_P, (RtPointer) Square, RI_NULL);
+		const float size = 0.001f + (b.size() * 0.0025f);
+		//const float  intensity = 0.01f + b.intensity() * 0.025f;
+
+		RiAttributeBegin();
+		RiTranslate(x, y, z);
+		RtFloat kr = 1;
+		RiSurface("star_core","Kd",&kr,RI_NULL);
+		RiSphere(size, 0.0f, 0.5f, 360.0f, RI_NULL);
+		RiAttributeEnd();
+	}
+
+	// Create the renderman attribute for a matte pass
+	void shadeMeshMattePass()
+	{
+		RiAttributeBegin();
+		RtFloat displacementbound = 3.0f;
+		const char* coord = "world";
+		RiAttribute("displacementbound", "sphere", &displacementbound, \
+		"coordinatesystem", &(coord), RI_NULL);
+		RiDisplacement("robin_mesh", RI_NULL);
+		RiSurface("robin_mesh_matte", RI_NULL);
+	}
+
+	// Create the renderman attribute for a reflect pass
+	void shadeMeshReflectPass()
+	{
+		RiAttributeBegin();
+		RtFloat displacementbound = 3.0f;
+		const char* coord = "world";
+		RiAttribute("displacementbound", "sphere", &displacementbound, \
+		"coordinatesystem", &(coord), RI_NULL);
+		RiDisplacement("robin_mesh", RI_NULL);
+		RiSurface("robin_mesh_color", RI_NULL);
+	}
+
+	// Create the renderman attribute for a skin pass
+	void shadeMeshSkinPass()
+	{
+		RiAttributeBegin();
+		RtFloat displacementbound = 3.0f;
+		const char* coord = "world";
+		RiAttribute("displacementbound", "sphere", &displacementbound, \
+		"coordinatesystem", &(coord), RI_NULL);
+		RiDisplacement("robin_mesh", RI_NULL);
+		RiSurface("robin_mesh_skin", RI_NULL);
+	}
+
+	// Render one mesh to renderman
+	void renderMesh(const std::vector<float>& mesh)
+	{
+		// Create a polygone from the mesh
+		// Create the pointPerFace array (always  3 for each face)
+		const int totalFaces = mesh.size()/9;
+		RtInt pointPerFace[totalFaces];
+		for(int i = 0; i<totalFaces; ++i)
+			pointPerFace[i] = 3;
+		// Usual parameters
+		RtToken boundary[] = {"interpolateboundary"};
+		RtInt nbIndiceTag[] = {0,0};
+		// Indices array
+		RtInt indices[mesh.size()];
+		for(unsigned int i=0; i< mesh.size()/3; ++i)
+			indices[i] = (RtInt) i;
+		// Vertex array
+		RtFloat vertices[mesh.size()*3];
+		for(unsigned int idx = 0; idx<mesh.size(); ++idx)
+			vertices[idx] = RtFloat(mesh[idx]);
+
+		RiSubdivisionMesh( \
+			"catmull-clark", \
+			(RtInt)totalFaces, \
+			pointPerFace, \
+			indices, \
+			1, \
+			boundary, \
+			nbIndiceTag, \
+			NULL, NULL, \
+			"P", vertices, \
+			RI_NULL \
+		);
 		RiAttributeEnd();
 	}
 }

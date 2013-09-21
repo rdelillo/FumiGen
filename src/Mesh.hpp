@@ -44,6 +44,8 @@ public :
 	void move();
 	//Draw function OpenGL
 	void brutalDraw();
+	// Render - functions RenderMan
+	void render();
 	
 private:
 	// Load Mesh data from file

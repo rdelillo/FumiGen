@@ -16,14 +16,17 @@ class Boid
 	std::vector<float> m_velocite;		// velocity of the boid
 	int m_leaderShip;			// 1000 if leader, 1 else
 	float m_intensity;			// 1 to 0
-	
+	// Renderman parameters
+	float m_size;				// size of the boid
+
 	public :
 	
 	// Usual Getters
 	inline float const idBoid() const {return m_idBoid;};
 	inline float const leaderShip() const {return m_leaderShip;};
 	inline void setLeaderShip(const int value){m_leaderShip = value;};
-	
+	inline float size() const { return m_size; }
+
 	// Builder
 	Boid(const int idBoid);
 	

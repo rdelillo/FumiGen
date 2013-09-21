@@ -38,7 +38,7 @@ public :
 	// Draw - function OpenGL
 	void brutalDraw();
 	// Render - functions RenderMan
-	void render();
+	virtual void render();
 	// Render - set render camera
 	void setRenderCamera(const std::vector<float>& camera);
 	// Render - reset the animation parameters

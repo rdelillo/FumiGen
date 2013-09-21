@@ -1,10 +1,13 @@
 #include "Boid.hpp"
 
+#include <cstdlib>
+
 // Builder
 Boid::Boid(const int idBoid)
 {
 	m_idBoid = idBoid;
 	m_intensity = 1.0f;
+	m_size = rand()/(float) RAND_MAX;
 	// Define basic position in origin
 	for(unsigned int i=0; i<3; ++i)
 	{
