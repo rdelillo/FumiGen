@@ -2,43 +2,45 @@
 #include "Boid.hpp"
 #include "Tools.hpp"
 
+#include <cstdlib>
 #include <algorithm>
 
 // Builder 
 // Create a Mesh from an obj file
-Mesh::Mesh(const std::string fileName):
+Mesh::Mesh(const std::string fileName, const float density):
 m_model(NULL),
 m_refMesh(NULL),
 m_nbFaces(0),
 m_currentFrame(0)
 {
 	m_type = "3D_MESH";
+	m_density = density;
 	m_model = tool_filesystem::open3dsFile(fileName);
 	// File is OK, load the model and construct the mesh
 	_loadDataFromFile();
-	//_adaptMesh();                                                     
-	_generateBoidsFromMesh();
 	// Add to the container per frame
 	// There is only 1 entry since the model does not move
 	m_meshes.push_back(m_mesh);
 	m_roughMeshes.push_back(m_roughMesh);
+	_computeDensity();
+	_generateBoidsFromMesh();
 }
 
 // Construct a Mesh from a 3ds file sequence
-Mesh::Mesh(const std::string filepath, const int start, const int end):
+Mesh::Mesh(const std::string filepath, const int start, const int end, const float density):
 m_model(NULL),
 m_refMesh(NULL),
 m_nbFaces(0),
 m_currentFrame(0)
 {
 	m_type = "3D_MESH";
+	m_density = density;
 	std::vector<std::string> files = tool_filesystem::brute_open3dsFiles(filepath, start, end);
 	for(unsigned int i=0; i<files.size(); ++i)
 	{
 		m_model = tool_filesystem::open3dsFile(files[i]);
 		// File is OK, load the model and construct the mesh
 		_loadDataFromFile();
-		//_adaptMesh();                                                     
 		// Add to the container per frame
 		// There is only 1 entry since the model does not move
 		m_meshes.push_back(m_mesh);
@@ -47,6 +49,7 @@ m_currentFrame(0)
 	// Put back the reader at top 
 	m_roughMesh = m_roughMeshes.at(0);
 	m_mesh = m_meshes.at(0);
+	_computeDensity();
 	_generateBoidsFromMesh();
 }
 
@@ -110,7 +113,29 @@ void Mesh::_generateBoidsFromMesh()
 
  		// Add this point as a new Boid
 		m_group.push_back(b);
-		continue;
+	}
+}
+
+// Manage the density defined for the Mesh
+void Mesh::_computeDensity()
+{
+	// Randomly remove point to respect density
+	const int nbMeshes = m_mesh.size()*(float)m_density;
+	while((int)m_mesh.size() > nbMeshes)
+	{
+		const float random = rand()/(float) RAND_MAX; 
+		const int randIdx = m_mesh.size()*random;
+		std::set< std::vector<float> >::iterator it0 = m_mesh.begin();
+		for(int l=0; l<randIdx; ++l)
+			++it0;
+		m_mesh.erase(it0);
+		for(unsigned int i=1; i<m_meshes.size(); ++i)
+		{
+			std::set< std::vector<float> >::iterator it = m_meshes[i].begin();
+			for(int l=0; l<randIdx; ++l)
+				++it;
+			m_meshes[i].erase(it);
+		}
 	}
 }
 
@@ -144,11 +169,11 @@ void Mesh::_adaptMesh()
 //@WARNING virtual function, needs to be overwritten
 void Mesh::move()
 {
-	if((unsigned int)m_currentFrame < m_meshes.size())
+	if((unsigned int)m_currentFrame+1 < m_meshes.size())
 	{
+		++m_currentFrame;
 		m_roughMesh = m_roughMeshes.at(m_currentFrame);
 		m_mesh = m_meshes.at(m_currentFrame);
-		//_generateBoidsFromMesh();
 		// We need to use the same boids else
 		// the intensity changes
 		std::set< std::vector<float> >::iterator it;
@@ -160,7 +185,6 @@ void Mesh::move()
 			m_group[i].setPosition(2, it->at(2));
 			++i;
 		}
-		++m_currentFrame;
 	}
 	else
 		m_currentFrame = 0;

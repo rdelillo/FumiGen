@@ -19,6 +19,7 @@ typedef struct
 	std::string filepath;
 	unsigned int start;
 	unsigned int end;
+	float density;
 } Temp_Mesh;
 
 typedef struct 

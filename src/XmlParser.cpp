@@ -74,6 +74,11 @@ void XmlParser::_addMeshes()
 		meshInfo.filepath = it->attribute("filepath").value();
 		meshInfo.start = it->attribute("start").as_int();
 		meshInfo.end = it->attribute("end").as_int();
+		if(it->attribute("density"))
+			meshInfo.density = it->attribute("density").as_float();
+		else
+			meshInfo.density = 1.0f;
+		
 
 		// Test animated figure
 		AnimatedData animated_mesh;
@@ -96,6 +101,7 @@ void XmlParser::_addMeshes()
 			animated_mesh.m_startSequence = meshInfo.start;
 			animated_mesh.m_endSequence = meshInfo.end;
 			animated_mesh.frameExplosion = animated_mesh.frameBoids = 0;
+			animated_mesh.m_density = meshInfo.density;
 			if(turnInto_boidsSystem != 0)
 			{
 				animated_mesh.frameBoids = turnInto_boidsSystem;
@@ -117,9 +123,9 @@ void XmlParser::_addMeshes()
 		Mesh * new_mesh ;
 		// Animated mesh providen
 		if(meshInfo.end == 0)
-			new_mesh = new Mesh(meshInfo.filepath);
+			new_mesh = new Mesh(meshInfo.filepath, meshInfo.density);
 		else
-			new_mesh = new Mesh(meshInfo.filepath, meshInfo.start, meshInfo.end);
+			new_mesh = new Mesh(meshInfo.filepath, meshInfo.start, meshInfo.end, meshInfo.density);
 		new_mesh->setName(meshInfo.name);
 		// Look for a potential animated mesh
 		if(animatedMeshVector.size() > 0 && animatedMeshVector.at(0).indexFigure == i)

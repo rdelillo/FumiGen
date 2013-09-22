@@ -193,14 +193,6 @@ void Application::handleKeyDownEvents(SDL_keysym* keysym)
 		case SDLK_SPACE :
 			m_camera->startPlayMode();
 			break;
-
-		// Camera info
-		case SDLK_c :
-			std::cout << "position : " \
-			<< m_camera->position(0) << "," \
-			<< m_camera->position(1) << "," \
-			<<  m_camera->position(2) << std::endl;
-			break;
 		
 		// Render : launch the renderman rendermode
 		// Like a play mode but with the render option enabled
@@ -440,7 +432,8 @@ void Application::_reset()
 			new_mesh = new Mesh( \
 				animation.meshFilesPath, \
 				animation.m_startSequence, \
-				animation.m_endSequence \
+				animation.m_endSequence, \
+				animation.m_density \
 			);
 			// Insert the new Figure at same position
 			m_figures.insert( \

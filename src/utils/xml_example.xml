@@ -14,6 +14,7 @@
 	<meshes>
 <!--	<mesh 	name="Mesh_1"   	name of the mesh Figure
 		filepath=""		filepath for animated mesh 
+		density=""		density to have all of the point from the mesh
 		start=""		first frame of the 3ds sequence
 		end=""			last frame of the 3ds sequence
 		boidsSystem=""		frame - turn into boids system
@@ -24,6 +25,7 @@
 -->
 		<mesh 	name="Mesh_1"
 			filepath=""
+			density=""
 			start=""
 			end=""
 			boidsSystem=""

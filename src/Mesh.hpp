@@ -18,7 +18,8 @@ private :
 	// Attributes
 	Lib3dsFile * m_model;           		// Model (analyzed 3DS file)
 	Lib3dsMesh * m_refMesh;				// Mesh reference
-	int m_nbFaces;					// Number of faces of the Mesh	
+	int m_nbFaces;					// Number of faces of the Mesh
+	float m_density;				// Transform the point to boids	
 	//@WARNING float* due to lib3ds
     	float m_boundingMin[3], m_boundingMax[3];     	// Bounding box
 	//this info does not contain double,
@@ -36,9 +37,9 @@ private :
 public :
 	// Builder
 	// Construct a Mesh from a 3ds file
-	Mesh(const std::string filename);
+	Mesh(const std::string filename, const float density=1.0f);
 	// Construct a Mesh from a 3ds file sequence
-	Mesh(const std::string filepath, const int start, const int end);
+	Mesh(const std::string filepath, const int start, const int end, const float density=1.0f);
 
 	// Move the Mesh (animation)
 	void move();
@@ -52,6 +53,8 @@ private:
 	void _loadDataFromFile();
 	// Generate boid field	
 	void _generateBoidsFromMesh();
+	// Manage the density defined for the Mesh
+	void _computeDensity();
 	// Adapt mesh to be between 0 and 1
 	void _adaptMesh();               
 };

@@ -25,6 +25,7 @@ typedef struct
 	unsigned int b_endSequence;	// Last frame of the sequence boids system
 	unsigned int frameBoids;	// Frame to turn into boids system
 	unsigned int frameExplosion;	// Frame to explose the Figure
+	float m_density;		// Density of the Figure
 }
 AnimatedData;
 
