@@ -648,12 +648,12 @@ namespace tool_renderman
 		const float x = b.position(0);
 		const float y = b.position(1);
 		const float z = b.position(2);
-		const float size = 0.001f + (b.size() * 0.0025f);
-		//const float  intensity = 0.01f + b.intensity() * 0.025f;
+		const float size = 0.01f + (b.size() * 0.0025f);
+		const float  intensity = 0.5f + b.intensity() * 0.5f;
 
 		RiAttributeBegin();
 		RiTranslate(x, y, z);
-		RtFloat kr = 1;
+		RtFloat kr = intensity;
 		RiSurface("star_core","Kd",&kr,RI_NULL);
 		RiSphere(size, 0.0f, 0.5f, 360.0f, RI_NULL);
 		RiAttributeEnd();
@@ -712,7 +712,7 @@ namespace tool_renderman
 		for(unsigned int i=0; i< mesh.size()/3; ++i)
 			indices[i] = (RtInt) i;
 		// Vertex array
-		RtFloat vertices[mesh.size()*3];
+		RtFloat vertices[mesh.size()];
 		for(unsigned int idx = 0; idx<mesh.size(); ++idx)
 			vertices[idx] = RtFloat(mesh[idx]);
 
